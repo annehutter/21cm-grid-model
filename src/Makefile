@@ -12,7 +12,7 @@ SOURCES := 	./main.c \
 		./xray_heating_lya_coupling/convolution_fftw.c \
 		./xray_heating_lya_coupling/cosmology.c \
 		./xray_heating_lya_coupling/cross_sections.c \
-		./xray_heating_lya_coupling/fftw_array_tools.h \
+		./xray_heating_lya_coupling/fftw_array_tools.c \
 		./xray_heating_lya_coupling/phys_const.c \
 		./xray_heating_lya_coupling/redshift_tools.c \
 		./xray_heating_lya_coupling/spin_temperature.c \

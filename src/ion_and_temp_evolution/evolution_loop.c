@@ -39,7 +39,7 @@ void do_temp_integration_step(double *temp_old, double dt_sub, double dt, double
 	{
 		temp = PatankarRKnoncon(*temp_old, dt_sub, dt, n, dn, thisCell);
 // 		printf("temp = %e\t temp_old = %e\n", temp, *temp_old);
-		if(temp/(*temp_old) > 2.)
+		if(temp/(*temp_old) > 2. && N<2000)
 		{
 			do_temp_integration_step(temp_old, dt_sub*0.5, dt, n, dn, thisCell, N*2);
 		}

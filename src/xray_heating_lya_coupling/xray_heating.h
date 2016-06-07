@@ -69,17 +69,17 @@ double xray_heating_function_HI(double nu, void *p);
 double xray_heating_function_HeI(double nu, void *p);
 double xray_heating_function_HeII(double nu, void *p);
 
-double xray_heating_HI_calc_integral(xray_params_t params, double lowLim);
-double xray_heating_HeI_calc_integral(xray_params_t params, double lowLim);
-double xray_heating_HeII_calc_integral(xray_params_t params, double lowLim);
+double xray_heating_HI_calc_integral(xray_params_t params, double lowLim, double upLim);
+double xray_heating_HeI_calc_integral(xray_params_t params, double lowLim, double upLim);
+double xray_heating_HeII_calc_integral(xray_params_t params, double lowLim, double upLim);
 
 double xray_ionization_function_HI(double nu, void *p);
 double xray_ionization_function_HeI(double nu, void *p);
 double xray_ionization_function_HeII(double nu, void *p);
 
-double xray_ionization_HI_calc_integral(xray_params_t params, double lowLim);
-double xray_ionization_HeI_calc_integral(xray_params_t params, double lowLim);
-double xray_ionization_HeII_calc_integral(xray_params_t params, double lowLim);
+double xray_ionization_HI_calc_integral(xray_params_t params, double lowLim, double upLim);
+double xray_ionization_HeI_calc_integral(xray_params_t params, double lowLim, double upLim);
+double xray_ionization_HeII_calc_integral(xray_params_t params, double lowLim, double upLim);
 
 
 void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter_heating, double *xray_filter_ionization, xray_params_t *xray_params, int type);
@@ -114,3 +114,5 @@ xray_spectrum_t *allocate_xray_spectrum(double lumX, double alphaX, double nu_mi
 xray_grid_t *initXray_grid();
 void deallocate_xray_grid(xray_grid_t * thisXray_grid);
 xray_grid_t *allocate_xray_grid(int nbins, float box_size);
+
+void read_lum_xraygrid(xray_grid_t *thisXray_grid, char *filename, int double_precision);

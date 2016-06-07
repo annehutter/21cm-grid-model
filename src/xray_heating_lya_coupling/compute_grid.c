@@ -49,6 +49,7 @@ void compute_Tb_grid(grid_21cm_t *this21cmGrid, cosmology_t *thisCosmology)
 			for(int k=0; k<nbins; k++)
 			{
 				this21cmGrid->Tb[i*nbins*nbins+j*nbins+k] = factor*creal(this21cmGrid->XHI[i*nbins*nbins+j*nbins+k])*(1. - Tbg * creal(this21cmGrid->Ts_inv[i*nbins*nbins+j*nbins+k])) + 0.*I;
+				printf("factor = %e\t Tbg = %e\t Tb = %e\t Ts = %e\n", factor, Tbg, creal(this21cmGrid->Tb[i*nbins*nbins+j*nbins+k]), 1./creal(this21cmGrid->Ts_inv[i*nbins*nbins+j*nbins+k]));
 			}
 		}
 	}
@@ -57,17 +58,22 @@ void compute_Tb_grid(grid_21cm_t *this21cmGrid, cosmology_t *thisCosmology)
 /* compute xray and lya fields, get ionization and temperature & compute spin temperature */
 void do_step_21cm_emission(cosmology_t *thisCosmology, xray_grid_t *thisXray_grid, xray_spectrum_t *thisXray_spectrum, lya_grid_t * thisLya_grid, lya_spectrum_t *thisLya_spectrum, grid_21cm_t *this21cmGrid, k10_t *k10_table, double Xe)
 {
+	printf("do_step_21cm_emission\n");
 	/* compute xray heating and ionization */
 	xray_heating_and_ionization(thisXray_grid, thisCosmology, Xe, thisXray_spectrum);
-  
+  	printf("do_step_21cm_emission: xray heating and ionization done\n");
+
 	/* compute wouthuysen coupling */
 	lya_wouthuysen_coupling(thisLya_grid, thisLya_spectrum, thisXray_grid, thisCosmology);
-	
+	printf("do_step_21cm_emission: lya coupling done\n");
+
 	/* compute the spin temperature */
 	compute_Ts_on_grid(thisLya_grid, k10_table, this21cmGrid, thisCosmology);
-	
+	printf("do_step_21cm_emission: Ts calclated\n");
+
 	/* compute 21cm emission/absorption */
 	compute_Tb_grid(this21cmGrid, thisCosmology);
+	printf("do_step_21cm_emission: Tb calculated\n");
 }
 
 

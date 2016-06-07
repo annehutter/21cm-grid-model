@@ -29,3 +29,4 @@ const double A10 = 2.85e-15;		//in s^-1
 
 const double epsilon0 = 8.85e-12;
 
+const double epsilon = 1.e-4;		//small number to add to avoid infinity

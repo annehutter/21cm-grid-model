@@ -126,6 +126,13 @@ void initialize_21cmgrid(fftw_complex *thisArray, int nbins, int local_n0, doubl
 	}
 }
 
+void set_temperature_21cmgrid(grid_21cm_t *this21cmGrid, double value)
+{
+	int nbins = this21cmGrid->nbins;
+	int local_n0 = this21cmGrid->local_n0;
+	
+	initialize_21cmgrid(this21cmGrid->temp, nbins, local_n0, value);
+}
 
 void read_density_21cmgrid(grid_21cm_t *this21cmGrid, char *filename, int double_precision)
 {
@@ -136,20 +143,20 @@ void read_density_21cmgrid(grid_21cm_t *this21cmGrid, char *filename, int double
 #endif
 	int nbins;
 	
-	nbins = thisGrid->nbins;
-	local_n0 = thisGrid->local_n0;
+	nbins = this21cmGrid->nbins;
+	local_n0 = this21cmGrid->local_n0;
 	
 	if(double_precision == 1)
 	{
 #ifdef __MPI
-	local_0_start = thisGrid->local_0_start;
+	local_0_start = this21cmGrid->local_0_start;
 	read_grid_doubleprecision(this21cmGrid->dens, nbins, local_n0, local_0_start, filename);
 #else
 	read_grid_doubleprecision(this21cmGrid->dens, nbins, local_n0, filename);
 #endif
 	}else{
 #ifdef __MPI
-	local_0_start = thisGrid->local_0_start;
+	local_0_start = this21cmGrid->local_0_start;
 	read_grid(this21cmGrid->dens, nbins, local_n0, local_0_start, filename);
 #else
 	read_grid(this21cmGrid->dens, nbins, local_n0, filename);

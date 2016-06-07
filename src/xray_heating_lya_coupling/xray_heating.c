@@ -12,6 +12,7 @@
 #include <fftw3.h>
 #endif
 
+#include "fftw_array_tools.h"
 #include "phys_const.h"
 #include "chem_const.h"
 #include "cosmology.h"
@@ -192,7 +193,7 @@ double xray_heating_function_HeII(double nu, void *p)
 	}
 }
 
-double xray_heating_HI_calc_integral(xray_params_t params, double lowLim)
+double xray_heating_HI_calc_integral(xray_params_t params, double lowLim, double upLim)
 {
 	gsl_function F;
 	F.function = &xray_heating_function_HI;
@@ -201,13 +202,13 @@ double xray_heating_HI_calc_integral(xray_params_t params, double lowLim)
 	
 	gsl_integration_workspace * w = gsl_integration_workspace_alloc(100000); 
 	
-	gsl_integration_qagiu(&F, lowLim, 1.e-9, 1.e-9, 10000, w, &result, &error);
+	gsl_integration_qag(&F, lowLim, upLim, 1.e-9, 1.e-9, 10000, 1, w, &result, &error);
 	
 	gsl_integration_workspace_free(w);
 	return result;
 }
 
-double xray_heating_HeI_calc_integral(xray_params_t params, double lowLim)
+double xray_heating_HeI_calc_integral(xray_params_t params, double lowLim, double upLim)
 {
 	gsl_function F;
 	F.function = &xray_heating_function_HeI;
@@ -216,13 +217,13 @@ double xray_heating_HeI_calc_integral(xray_params_t params, double lowLim)
 	
 	gsl_integration_workspace * w = gsl_integration_workspace_alloc(100000); 
 	
-	gsl_integration_qagiu(&F, lowLim, 1.e-9, 1.e-9, 10000, w, &result, &error);
+	gsl_integration_qag(&F, lowLim, upLim, 1.e-9, 1.e-9, 10000, 1, w, &result, &error);
 	
 	gsl_integration_workspace_free(w);
 	return result;
 }
 
-double xray_heating_HeII_calc_integral(xray_params_t params, double lowLim)
+double xray_heating_HeII_calc_integral(xray_params_t params, double lowLim, double upLim)
 {
 	gsl_function F;
 	F.function = &xray_heating_function_HeII;
@@ -231,7 +232,7 @@ double xray_heating_HeII_calc_integral(xray_params_t params, double lowLim)
 	
 	gsl_integration_workspace * w = gsl_integration_workspace_alloc(100000); 
 	
-	gsl_integration_qagiu(&F, lowLim, 1.e-9, 1.e-9, 10000, w, &result, &error);
+	gsl_integration_qag(&F, lowLim, upLim, 1.e-9, 1.e-9, 10000, 1, w, &result, &error);
 	
 	gsl_integration_workspace_free(w);
 	return result;
@@ -286,7 +287,7 @@ double xray_ionization_function_HeII(double nu, void *p)
 	}
 }
 
-double xray_ionization_HI_calc_integral(xray_params_t params, double lowLim)
+double xray_ionization_HI_calc_integral(xray_params_t params, double lowLim, double upLim)
 {
 	gsl_function F;
 	F.function = &xray_ionization_function_HI;
@@ -295,13 +296,13 @@ double xray_ionization_HI_calc_integral(xray_params_t params, double lowLim)
 	
 	gsl_integration_workspace * w = gsl_integration_workspace_alloc(100000); 
 	
-	gsl_integration_qagiu(&F, lowLim, 1.e-9, 1.e-9, 10000, w, &result, &error);
+	gsl_integration_qag(&F, lowLim, upLim, 1.e-9, 1.e-9, 10000, 1, w, &result, &error);
 	
 	gsl_integration_workspace_free(w);
 	return result;
 }
 
-double xray_ionization_HeI_calc_integral(xray_params_t params, double lowLim)
+double xray_ionization_HeI_calc_integral(xray_params_t params, double lowLim, double upLim)
 {
 	gsl_function F;
 	F.function = &xray_ionization_function_HeI;
@@ -310,13 +311,13 @@ double xray_ionization_HeI_calc_integral(xray_params_t params, double lowLim)
 	
 	gsl_integration_workspace * w = gsl_integration_workspace_alloc(100000); 
 	
-	gsl_integration_qagiu(&F, lowLim, 1.e-9, 1.e-9, 10000, w, &result, &error);
+	gsl_integration_qag(&F, lowLim, upLim, 1.e-9, 1.e-9, 10000, 1, w, &result, &error);
 	
 	gsl_integration_workspace_free(w);
 	return result;
 }
 
-double xray_ionization_HeII_calc_integral(xray_params_t params, double lowLim)
+double xray_ionization_HeII_calc_integral(xray_params_t params, double lowLim, double upLim)
 {
 	gsl_function F;
 	F.function = &xray_ionization_function_HeII;
@@ -325,7 +326,7 @@ double xray_ionization_HeII_calc_integral(xray_params_t params, double lowLim)
 	
 	gsl_integration_workspace * w = gsl_integration_workspace_alloc(100000); 
 	
-	gsl_integration_qagiu(&F, lowLim, 1.e-9, 1.e-9, 10000, w, &result, &error);
+	gsl_integration_qag(&F, lowLim, upLim, 1.e-9, 1.e-9, 10000, 1, w, &result, &error);
 	
 	gsl_integration_workspace_free(w);
 	return result;
@@ -344,7 +345,7 @@ void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter
 	
 	for(int i=0; i<nbins; i++)
 	{
-		const double x = (thisXray_grid->box_size/h/(1.+z))*i/nbins;
+		const double x = (thisXray_grid->box_size/h)*i/nbins*Mpc_cm;	//in comoving cm
 		xray_params->x = x;
 			
 		/* compute 1+z', z' is redshift at x */
@@ -353,17 +354,18 @@ void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter
 		
 		if(type == 0)
 		{
-			xray_filter_heating[i] = xray_heating_HI_calc_integral(*xray_params, nu_HI)/(4.*M_PI*SQR(x));
-			xray_filter_ionization[i] = xray_ionization_HI_calc_integral(*xray_params, nu_HI)/(4.*M_PI*SQR(x));
+			xray_filter_heating[i] = xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
+			xray_filter_ionization[i] = xray_ionization_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
 		}else if(type == 1)
 		{
-			xray_filter_heating[i] = xray_heating_HeI_calc_integral(*xray_params, nu_HeI)/(4.*M_PI*SQR(x));
-			xray_filter_ionization[i] = xray_ionization_HeI_calc_integral(*xray_params, nu_HeI)/(4.*M_PI*SQR(x));
+			xray_filter_heating[i] = xray_heating_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
+			xray_filter_ionization[i] = xray_ionization_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
 		}else if(type ==2)
 		{
-			xray_filter_heating[i] = xray_heating_HeII_calc_integral(*xray_params, nu_HeII)/(4.*M_PI*SQR(x));
-			xray_filter_ionization[i] = xray_ionization_HeII_calc_integral(*xray_params, nu_HeII)/(4.*M_PI*SQR(x));
+			xray_filter_heating[i] = xray_heating_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
+			xray_filter_ionization[i] = xray_ionization_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
 		}
+// 		printf("x = %e\t z_em = %e\t heating[%d] = %e\t ionization[%d] = %e\n", x, tmp-1., i, xray_filter_heating[i], i, xray_filter_ionization[i]);
 	}
 }
 
@@ -412,6 +414,7 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 	double *xray_filter_function_ionization;
 	
 	int nbins = thisXray_grid->nbins;
+	int local_n0 = thisXray_grid->local_n0;
 	
 	xray_params_t *xray_params;
 	
@@ -435,6 +438,8 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 	xray_params->omega_m = thisCosmology->omega_m;
 	xray_params->omega_l = thisCosmology->omega_l;
 
+// 	printf("xray heating and ionization: initialisation done\n");
+	
 	/* allocating space for filters for heating and ionization */
 	xray_filter_heating = (fftw_complex*)malloc(sizeof(fftw_complex)*nbins*nbins*nbins);
 	if(xray_filter_heating == NULL)
@@ -465,12 +470,17 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 	
 	for(int type=0; type<3; type++)
 	{
+// 		printf("building filter function for type %d\n", type);
 		/* build the filter function */
 		xray_build_filter_functions(thisXray_grid, xray_filter_function_heating, xray_filter_function_ionization, xray_params, type);
+		
+// 		printf("filter functions built\n");
 
 		/* generate 3D grid of filter */
 		xray_filter(thisXray_grid, xray_filter_function_heating, xray_filter_heating);
 		xray_filter(thisXray_grid, xray_filter_function_ionization, xray_filter_ionization);
+		
+// 		printf("filter array built\n");
 		
 		if(type == 0){
 			convolve_fft(thisXray_grid, xray_filter_heating, thisXray_grid->xray_heating_HI, thisXray_grid->xray_lum);
@@ -482,6 +492,7 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 			convolve_fft(thisXray_grid, xray_filter_heating, thisXray_grid->xray_heating_HeII, thisXray_grid->xray_lum);
 			convolve_fft(thisXray_grid, xray_filter_ionization, thisXray_grid->xray_ionization_HeII, thisXray_grid->xray_lum);
 		}
+// 		printf("convolution done\n");
 	}
 	
 	fftw_free(xray_filter_heating);
@@ -491,6 +502,22 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 	free(xray_filter_function_ionization);
 	
 	deallocate_xray_params(xray_params);
+	
+// 	for(int i=0; i<local_n0; i++)
+// 	{
+// 		for(int j=0; i<nbins; j++)
+// 		{
+// 			for(int k=0; k<nbins; k++)
+// 			{
+// 				printf("xray_heating_HI = %e\t xray_ionization_HI = %e\n", creal(thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k]), creal(thisXray_grid->xray_ionization_HI[i*nbins*nbins+j*nbins+k]));
+// 				
+// 				printf("xray_heating_HeI = %e\t xray_ionization_HeI = %e\n", creal(thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k]), creal(thisXray_grid->xray_ionization_HeI[i*nbins*nbins+j*nbins+k]));
+// 
+// 				printf("xray_heating_HeII = %e\t xray_ionization_HeII = %e\n\n", creal(thisXray_grid->xray_heating_HeII[i*nbins*nbins+j*nbins+k]), creal(thisXray_grid->xray_ionization_HeII[i*nbins*nbins+j*nbins+k]));
+// 
+// 			}
+// 		}
+// 	}
 }
 
 void xray_heating_and_ionization_global(xray_grid_t *thisXray_grid, cosmology_t *thisCosmology, double Xe, xray_spectrum_t *thisSpectrum)
@@ -701,4 +728,35 @@ xray_grid_t *allocate_xray_grid(int nbins, float box_size)
 #endif
 	
 	return thisXray_grid;
+}
+
+
+void read_lum_xraygrid(xray_grid_t *thisXray_grid, char *filename, int double_precision)
+{
+#ifdef __MPI
+	ptrdiff_t local_n0, local_0_start;
+#else
+	ptrdiff_t local_n0;
+#endif
+	int nbins;
+	
+	nbins = thisXray_grid->nbins;
+	local_n0 = thisXray_grid->local_n0;
+	
+	if(double_precision == 1)
+	{
+#ifdef __MPI
+	local_0_start = thisXray_grid->local_0_start;
+	read_grid_doubleprecision(thisXray_grid->xray_lum, nbins, local_n0, local_0_start, filename);
+#else
+	read_grid_doubleprecision(thisXray_grid->xray_lum, nbins, local_n0, filename);
+#endif
+	}else{
+#ifdef __MPI
+	local_0_start = thisXray_grid->local_0_start;
+	read_grid(thisXray_grid->xray_lum, nbins, local_n0, local_0_start, filename);
+#else
+	read_grid(thisXray_grid->xray_lum, nbins, local_n0, filename);
+#endif
+	}
 }

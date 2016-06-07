@@ -72,3 +72,4 @@ lya_grid_t *initLya_grid();
 void deallocate_lya_grid(lya_grid_t * thisLya_grid);
 lya_grid_t *allocate_lya_grid(int nbins, float box_size);
 void initialize_lya_grid(lya_grid_t *thisLya_grid);
+void read_lum_lyagrid(lya_grid_t *thisLya_grid, char *filename, int double_precision);

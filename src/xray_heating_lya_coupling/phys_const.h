@@ -27,4 +27,6 @@ extern const double rho_g_cm;	// in gramms/cm^3
 extern const double e;
 extern const double A10;
 extern const double epsilon0;
+
+extern const double epsilon;
 #endif

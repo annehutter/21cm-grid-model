@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <gsl/gsl_math.h>	//included because M_PI is not defined in <math.h>
 #include <assert.h>
 #include <complex.h>
@@ -57,42 +58,52 @@ void evolve()
 /*-------------------------------------------------------------------------------------*/
 /* XRAY Spectrum */
 /*-------------------------------------------------------------------------------------*/
-	double lumX = 1.;
-	double alphaX = -1.;
-	double nuX_min = 0.;
-
+	double alphaX = -1.5;
+	double nuX_min = 0.1e3*ev_to_erg/planck_cgs;
+	double lumX = 3.4e40/(1.e3*ev_to_erg);
+	printf("alphaX = %e\t nuX_min = %e\t lumX = %e\n", alphaX, nuX_min, lumX);
 /*-------------------------------------------------------------------------------------*/
 /* LYA Spectrum */
 /*-------------------------------------------------------------------------------------*/
-	double lumLya = 1.;
-	double alphaLya = -1.;
-	double nuLya_min = 0.;
+	double alphaLya = -1.5;
+	double nuLya_min = nuX_min;
+	double lumLya = 3.4e40/(1.e3*ev_to_erg);
 
 /*-------------------------------------------------------------------------------------*/
 /* GRID */
 /*-------------------------------------------------------------------------------------*/
 	int nbins = 128;
-	int local_n0 = 0;
+	int local_n0 = nbins;
 	double box_size = 80.;
 	
-	char *densfile;
-	char *xray_sourcefile;
-	char *lya_sourcefile;
+	char densfile[128];
+	char xray_sourcefile[128];
+	char lya_sourcefile[128];
+	
+	for (int i=0; i<128; i++)
+	{
+		densfile[i] = '\0';
+		xray_sourcefile[i] = '\0';
+		lya_sourcefile[i] = '\0';
+	}
+	strcat(densfile, "/home/anne/PostdocSwinburne/grid_model_mpi/inputfiles/grid128/density11_ic.in");
+	strcat(xray_sourcefile, "/home/anne/PostdocSwinburne/grid_model_mpi/inputfiles/grid128/density11_ic.in");
+	strcat(lya_sourcefile, "/home/anne/PostdocSwinburne/grid_model_mpi/inputfiles/grid128/density11_ic.in");
 	
 /*-------------------------------------------------------------------------------------*/
 /* Initialize for ionization and temperature evolution */
 /*-------------------------------------------------------------------------------------*/
-	double zstart = 300.;
+	double zstart = 25.;
 	double zend = 10.;
-	double dz = 0.01;
+	double dz = 0.5;
   
 	cell_t *cell;
-	cell = initCell_temp(T_CMB(zstart), 1.);
+	cell = initCell_temp(14., 1.);
 	
 	recomb_t * recomb_rates;
 	recomb_rates = calcRecRate();
 	
-	int dim_matrix = 5;
+	int dim_matrix = 2;
 	
 /*-------------------------------------------------------------------------------------*/
 /* Initialize for 21cm computation */
@@ -110,6 +121,8 @@ void evolve()
 	
 	k10_t *k10_table;
 	
+	int double_precision = 0;
+	
 	thisCosmology = allocate_cosmology(h, omega_m, omega_l, omega_b, zstart, Y);
 	
 	thisXray_grid = allocate_xray_grid(nbins, box_size);
@@ -121,6 +134,10 @@ void evolve()
 	this21cmGrid = allocate_21cmgrid(nbins, box_size);
 	
 	read_density_21cmgrid(this21cmGrid, densfile, double_precision);
+	read_lum_xraygrid(thisXray_grid, xray_sourcefile, double_precision);
+	read_lum_lyagrid(thisLya_grid, lya_sourcefile, double_precision);
+	
+	set_temperature_21cmgrid(this21cmGrid, T_CMB(zstart));
 	
 	k10_table = create_k10_table();
 	
@@ -140,44 +157,57 @@ void evolve()
 	
 	double Xe = 0.;
 	
-	for(double z = zstart; z>zend; z = z-dz)
+	double dz_tmp = dz;
+	
+	for(double z = zstart; z>zend; z = z-dz_tmp)
 	{
+		printf("z = %e\t %e\n", z, fmod(z,dz));
 		cosmology_update_z(thisCosmology, z);
-		Xe = get_mean_Xe_21cmgrid(this21cmGrid);
-		do_step_21cm_emission(thisCosmology, thisXray_grid, thisXray_spectrum, thisLya_grid, thisLya_spectrum, this21cmGrid, k10_table, Xe);
+		if(fmod(z,dz) == 0.)
+		{
+			Xe = get_mean_Xe_21cmgrid(this21cmGrid);
+			printf("Xe = %e\n", Xe);
+			do_step_21cm_emission(thisCosmology, thisXray_grid, thisXray_spectrum, thisLya_grid, thisLya_spectrum, this21cmGrid, k10_table, Xe);
+		}
 		for(int i=0; i<local_n0; i++)
 		{
 			for(int j=0; j<nbins; j++)
 			{
 				for(int k=0; k<nbins; k++)
 				{
-					double XHII = 1.-creal(this21cmGrid->XHI[i*nbins*nbins+j*nbins+k]);
-					double XHeII = creal(this21cmGrid->XHeII[i*nbins*nbins+j*nbins+k]);
-					double XHeIII = 1.-XHeII-creal(this21cmGrid->XHeI[i*nbins*nbins+j*nbins+k]);
-					update_X_cell(cell, XHII, XHeII, XHeIII);
-					
-					double dens = creal(this21cmGrid->dens[i*nbins*nbins+j*nbins+k]);
-					update_dens_cell(cell, dens);
-					
-					double temp = creal(this21cmGrid->temp[i*nbins*nbins+j*nbins+k]);
-					update_temp_cell(cell, temp);
-					
-					double heatHI = fheat*creal(thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k]);
-					double heatHeI = fheat*creal(thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k]);
-					double heatHeII = fheat*creal(thisXray_grid->xray_heating_HeII[i*nbins*nbins+j*nbins+k]);
-					update_heat_cell(cell, heatHI, heatHeI, heatHeII);
-					
-					double photIonHI = creal(thisXray_grid->xray_ionization_HI[i*nbins*nbins+j*nbins+k]) + heatHI*fion_HI*tmp_HI;
-					double photIonHeI = creal(thisXray_grid->xray_ionization_HeI[i*nbins*nbins+j*nbins+k]) + heatHeI*fion_HeI*tmp_HeI;
-					double photIonHeII = creal(thisXray_grid->xray_ionization_HeII[i*nbins*nbins+j*nbins+k]) + heatHeII*fion_HeII*tmp_HeII;
-					update_photIon_cell(cell, photIonHI, photIonHeI, photIonHeII);
-					
-					printf("photHI = %e\n", cell->photIonHI);
+					if(fmod(z,dz) == 0.)
+					{
+						double XHII = 1.-creal(this21cmGrid->XHI[i*nbins*nbins+j*nbins+k]);
+						double XHeII = creal(this21cmGrid->XHeII[i*nbins*nbins+j*nbins+k]);
+						double XHeIII = 1.-XHeII-creal(this21cmGrid->XHeI[i*nbins*nbins+j*nbins+k]);
+						update_X_cell(cell, XHII, XHeII, XHeIII);
+						
+						double dens = creal(this21cmGrid->dens[i*nbins*nbins+j*nbins+k]);
+						update_dens_cell(cell, dens);
+						
+						double temp = creal(this21cmGrid->temp[i*nbins*nbins+j*nbins+k]);
+						update_temp_cell(cell, temp);
+						
+						double heatHI = fheat*creal(thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k]);
+						double heatHeI = fheat*creal(thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k]);
+						double heatHeII = fheat*creal(thisXray_grid->xray_heating_HeII[i*nbins*nbins+j*nbins+k]);
+						update_heat_cell(cell, heatHI, heatHeI, heatHeII);
+						
+						double photIonHI = creal(thisXray_grid->xray_ionization_HI[i*nbins*nbins+j*nbins+k]) + heatHI*fion_HI*tmp_HI;
+						double photIonHeI = creal(thisXray_grid->xray_ionization_HeI[i*nbins*nbins+j*nbins+k]) + heatHeI*fion_HeI*tmp_HeI;
+						double photIonHeII = creal(thisXray_grid->xray_ionization_HeII[i*nbins*nbins+j*nbins+k]) + heatHeII*fion_HeII*tmp_HeII;
+						update_photIon_cell(cell, photIonHI, photIonHeI, photIonHeII);
+						
+// 						printf("photHI = %e\n", cell->photIonHI);
+					}
 
-					calc_step(recomb_rates, cell, dim_matrix, z, dz);
-					printf("z = %e:\tT = %e\t T = T0/(1+z)^2 = %e\t XHII = %e\t XHeII = %e\t XHeIII = %e\n", z, cell->temp, TCMB(zstart)/((1.+zstart)*(1.+zstart))*((1.+z-dz)*(1.+z-dz)), cell->XHII, cell->XHeII, cell->XHeIII);
+					calc_step(recomb_rates, cell, dim_matrix, z, dz_tmp);
+					printf("%d %d %d: z = %e:\tT = %e\t T = T0/(1+z)^2 = %e\t XHII = %e\t XHeII = %e\t XHeIII = %e\n", i,j,k,z, cell->temp, T_CMB(zstart)/((1.+zstart)*(1.+zstart))*((1.+z-dz_tmp)*(1.+z-dz_tmp)), cell->XHII, cell->XHeII, cell->XHeIII);
 					
-					update_21cmgrid(this21cmGrid, cell, i, j, k);
+					if(fmod(z,dz) == 0.)
+					{
+						update_21cmgrid(this21cmGrid, cell, i, j, k);
+					}
 				}
 			}
 		}

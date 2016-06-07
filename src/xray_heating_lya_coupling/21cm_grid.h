@@ -30,6 +30,7 @@ grid_21cm_t *allocate_21cmgrid(int nbins, float box_size);
 
 void initialize_21cmgrid(fftw_complex *thisArray, int nbins, int local_n0, double value);
 
+void set_temperature_21cmgrid(grid_21cm_t *this21cmGrid, double value);
 void read_density_21cmgrid(grid_21cm_t *this21cmGrid, char *filename, int double_precision);
 
 double get_mean_Xe_21cmgrid(grid_21cm_t *this21cmGrid);

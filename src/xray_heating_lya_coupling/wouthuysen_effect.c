@@ -11,6 +11,7 @@
 #include <fftw3.h>
 #endif
 
+#include "fftw_array_tools.h"
 #include "phys_const.h"
 #include "chem_const.h"
 #include "cosmology.h"
@@ -54,7 +55,7 @@ void lya_filter(lya_grid_t *thisLya_grid, double n, fftw_complex *filter, double
 				const double k_expr = half_nbins - abs(k - half_nbins);
 				const double sq_k_expr = SQR(k_expr);
 				
-				const double expr = (sq_i_expr + sq_j_expr + sq_k_expr)*sq_factor;
+				const double expr = (sq_i_expr + sq_j_expr + sq_k_expr + epsilon)*sq_factor;
 				
 				double nu = nu_lyalimit*(1.-1./SQR(n))/SQR(1.-H0*sqrt(omega_m*(1.+z))/(2.*clight_cm)*sqrt(expr));
 				
@@ -234,6 +235,7 @@ void lya_bg_lya_excitation(lya_grid_t *thisLya_grid, xray_grid_t *thisXray_grid,
 			{
 				double const heating = creal(thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeII[i*nbins*nbins+j*nbins+k]);
 				
+				if(heating<0.) printf("heating = %e\n", heating);
 				thisLya_grid->lya[i*nbins*nbins+j*nbins+k] = creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]) + heating*factor + 0.*I;
 			}
 		}
@@ -246,7 +248,7 @@ void lya_wouthuysen_coupling(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpect
 	int local_n0 = thisLya_grid->local_n0;
 	
 	/* compute comoving Lya flux */
-	lya_bg_source_emission(thisLya_grid, thisSpectrum, thisCosmology);
+// 	lya_bg_source_emission(thisLya_grid, thisSpectrum, thisCosmology);
 	lya_bg_lya_excitation(thisLya_grid, thisXray_grid, thisCosmology);
 	
 	/* compute prefactor for Lya coupling */
@@ -258,6 +260,8 @@ void lya_wouthuysen_coupling(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpect
 			for(int k=0; k<nbins; k++)
 			{
 				thisLya_grid->lya[i*nbins*nbins+j*nbins+k] = creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]) + 0.*I;
+				
+				printf("lya = %e\n", creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]));
 			}
 		}
 	}
@@ -409,5 +413,35 @@ void initialize_lya_grid(lya_grid_t *thisLya_grid)
 				thisLya_grid->lya_lum[i*nbins*nbins+j*nbins+k] = 0. + 0.*I;
 			}
 		}
+	}
+}
+
+void read_lum_lyagrid(lya_grid_t *thisLya_grid, char *filename, int double_precision)
+{
+#ifdef __MPI
+	ptrdiff_t local_n0, local_0_start;
+#else
+	ptrdiff_t local_n0;
+#endif
+	int nbins;
+	
+	nbins = thisLya_grid->nbins;
+	local_n0 = thisLya_grid->local_n0;
+	
+	if(double_precision == 1)
+	{
+#ifdef __MPI
+	local_0_start = thisLya_grid->local_0_start;
+	read_grid_doubleprecision(thisLya_grid->lya_lum, nbins, local_n0, local_0_start, filename);
+#else
+	read_grid_doubleprecision(thisLya_grid->lya_lum, nbins, local_n0, filename);
+#endif
+	}else{
+#ifdef __MPI
+	local_0_start = thisLya_grid->local_0_start;
+	read_grid(thisLya_grid->lya_lum, nbins, local_n0, local_0_start, filename);
+#else
+	read_grid(thisLya_grid->lya_lum, nbins, local_n0, filename);
+#endif
 	}
 }
