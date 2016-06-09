@@ -33,13 +33,14 @@ void compute_Tb_grid(grid_21cm_t *this21cmGrid, cosmology_t *thisCosmology)
 	double factor;
 	double Tbg;
 	
+	double Hubble_z = thisCosmology->Hubble_z;
 	double nH = thisCosmology->nH_z;
 	double z = thisCosmology->z;
 	
 	nbins = this21cmGrid->nbins;
 	local_n0 = this21cmGrid->local_n0;
 	
-	factor = (3.*clight_cm*SQR(lambda_21cm)*planck_cgs*A10*nH)/(32.*M_PI*boltzman_cgs*SQR(1.+z));
+	factor = (3.*clight_cm*SQR(lambda_21cm)*planck_cgs*A10*nH)/(32.*M_PI*boltzman_cgs*(1.+z)*Hubble_z);
 	Tbg = T_CMB(z);
 	
 	for(int i=0; i<local_n0; i++)

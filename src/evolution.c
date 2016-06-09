@@ -66,7 +66,7 @@ void evolve()
 /* LYA Spectrum */
 /*-------------------------------------------------------------------------------------*/
 	double alphaLya = -1.5;
-	double nuLya_min = nuX_min;
+	double nuLya_min = 10.3*ev_to_erg/planck_cgs;
 	double lumLya = 3.4e40/(1.e3*ev_to_erg);
 
 /*-------------------------------------------------------------------------------------*/
@@ -137,7 +137,7 @@ void evolve()
 	read_lum_xraygrid(thisXray_grid, xray_sourcefile, double_precision);
 	read_lum_lyagrid(thisLya_grid, lya_sourcefile, double_precision);
 	
-	set_temperature_21cmgrid(this21cmGrid, T_CMB(zstart));
+	set_temperature_21cmgrid(this21cmGrid, 14.);
 	
 	k10_table = create_k10_table();
 	

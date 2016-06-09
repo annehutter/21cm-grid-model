@@ -84,6 +84,7 @@ double compute_Ts_inv(double Hubble_z_inv, double nH, double XHI, double couplin
 		xa_mod = coupling_alpha(coupling_alpha_prefac_z, calc_modSalpha(Hubble_z_inv, nHI, Tk_inv, Ts_inv), Jalpha);
 		Teff_inv = calc_Teff_inv(Tk_inv, Ts_inv);
 		Ts_inv = calc_Ts_inv(xa_mod, xc, Teff_inv, Tk_inv, Tbg_inv);
+		printf("%d: \txa_mod = %e\t Teff = %e\t xc = %e\t Ts = %e\t Tk = %e\n", i, xa_mod, 1./Teff_inv, xc,  1./Ts_inv, 1./Tk_inv);
 	}
 	
 	return Ts_inv;
@@ -126,6 +127,8 @@ void compute_Ts_on_grid(lya_grid_t *thisLya_grid, k10_t *k10_table, grid_21cm_t 
 				Tk_inv = 1./Tk;
 				Ts_inv = compute_Ts_inv(Hubble_z_inv, nH, XHI, xalpha_prefac_z, Jalpha, xc, Tk_inv, Tbg_inv);
 				this21cmGrid->Ts_inv[i*nbins*nbins+j*nbins+k] = Ts_inv + 0.*I;
+// 				printf("dens = %e\t nH = %e\t XHI = %e\t Jalpha = %e\t xc = %e\t Tk = %e\n", dens, nH, XHI, Jalpha, xc, Tk);
+// 				printf("Ts = %e\n", 1./Ts_inv);
 			}
 		}
 	}

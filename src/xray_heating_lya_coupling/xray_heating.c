@@ -343,6 +343,8 @@ void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter
 	double omega_m = xray_params->omega_m;
 	double z = xray_params->zp;	//redshift of frame of absorption
 	
+	double eps = (thisXray_grid->box_size/h)*epsilon/nbins*Mpc_cm;
+	
 	for(int i=0; i<nbins; i++)
 	{
 		const double x = (thisXray_grid->box_size/h)*i/nbins*Mpc_cm;	//in comoving cm
@@ -354,16 +356,16 @@ void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter
 		
 		if(type == 0)
 		{
-			xray_filter_heating[i] = xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
-			xray_filter_ionization[i] = xray_ionization_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
+			xray_filter_heating[i] = xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+			xray_filter_ionization[i] = xray_ionization_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
 		}else if(type == 1)
 		{
-			xray_filter_heating[i] = xray_heating_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
-			xray_filter_ionization[i] = xray_ionization_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
+			xray_filter_heating[i] = xray_heating_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+			xray_filter_ionization[i] = xray_ionization_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
 		}else if(type ==2)
 		{
-			xray_filter_heating[i] = xray_heating_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
-			xray_filter_ionization[i] = xray_ionization_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + epsilon));
+			xray_filter_heating[i] = xray_heating_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+			xray_filter_ionization[i] = xray_ionization_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
 		}
 // 		printf("x = %e\t z_em = %e\t heating[%d] = %e\t ionization[%d] = %e\n", x, tmp-1., i, xray_filter_heating[i], i, xray_filter_ionization[i]);
 	}
@@ -395,6 +397,7 @@ void xray_filter(xray_grid_t *thisXray_grid, double *xray_filter_function, fftw_
 				const int expr_int = floor(expr);
 				
 				const double value = xray_filter_function[expr_int] + (xray_filter_function[expr_int+1]-xray_filter_function[expr_int])*(expr - floor(expr));
+// 				if(i==0 && j==0) printf("expr_int = %d \tf(expr_int) = %e\t value = %e\n", expr_int, xray_filter_function[expr_int], value);
 				
 				filter[i*nbins*nbins+j*nbins+k] = value + 0.*I;
 			}
@@ -485,6 +488,13 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 		if(type == 0){
 			convolve_fft(thisXray_grid, xray_filter_heating, thisXray_grid->xray_heating_HI, thisXray_grid->xray_lum);
 			convolve_fft(thisXray_grid, xray_filter_ionization, thisXray_grid->xray_ionization_HI, thisXray_grid->xray_lum);
+// #ifdef __MPI
+// 			write_grid_to_file_float(xray_filter_heating, nbins, local_n0, thisXray_grid->local_0_start, "xray_heating_filter.dat");
+// 			write_grid_to_file_float(thisXray_grid->xray_lum, nbins, local_n0, thisXray_grid->local_0_start, "xray_lum_HI.dat");
+// #else
+// 			write_grid_to_file_float(xray_filter_heating, nbins, local_n0, "xray_heating_filter.dat");
+// 			write_grid_to_file_float(thisXray_grid->xray_lum, nbins, local_n0, "xray_heating_lum.dat");
+// #endif
 		}else if(type == 1){
 			convolve_fft(thisXray_grid, xray_filter_heating, thisXray_grid->xray_heating_HeI, thisXray_grid->xray_lum);
 			convolve_fft(thisXray_grid, xray_filter_ionization, thisXray_grid->xray_ionization_HeI, thisXray_grid->xray_lum);
@@ -495,6 +505,12 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 // 		printf("convolution done\n");
 	}
 	
+// #ifdef __MPI
+// 	write_grid_to_file_float(thisXray_grid->xray_heating_HI, nbins, local_n0, thisXray_grid->local_0_start, "xray_heating_HI.dat");
+// #else
+// 	write_grid_to_file_float(thisXray_grid->xray_heating_HI, nbins, local_n0, "xray_heating_HI.dat");
+// #endif
+
 	fftw_free(xray_filter_heating);
 	fftw_free(xray_filter_ionization);
 	

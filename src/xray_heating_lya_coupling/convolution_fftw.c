@@ -61,6 +61,8 @@ void convolve_fft(xray_grid_t *thisXray_grid, fftw_complex *filter, fftw_complex
 	plan_filter = fftw_plan_dft_3d(nbins, nbins, nbins, filter, filter_ft, FFTW_FORWARD, FFTW_ESTIMATE);
 #endif
 	
+// 	write_grid_to_file_float(input, nbins, local_n0, thisXray_grid->local_0_start, "input.dat");
+
 	fftw_execute(plan_input);
 	fftw_execute(plan_filter);
 	
@@ -75,6 +77,8 @@ void convolve_fft(xray_grid_t *thisXray_grid, fftw_complex *filter, fftw_complex
 		}
 	}
 	
+// 	write_grid_to_file_float(input_ft, nbins, local_n0, thisXray_grid->local_0_start, "input_ft.dat");
+
 #ifdef __MPI
 	plan_back = fftw_mpi_plan_dft_3d(nbins, nbins, nbins, input_ft, output, MPI_COMM_WORLD, FFTW_BACKWARD, FFTW_MPI_TRANSPOSED_IN);
 #else
@@ -95,6 +99,8 @@ void convolve_fft(xray_grid_t *thisXray_grid, fftw_complex *filter, fftw_complex
 		}
 	}	
 	
+// 	write_grid_to_file_float(output, nbins, local_n0, thisXray_grid->local_0_start, "output.dat");
+
 	fftw_destroy_plan(plan_input);
 	fftw_destroy_plan(plan_filter);
 	fftw_destroy_plan(plan_back);

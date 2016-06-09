@@ -38,7 +38,7 @@ typedef struct
 	int local_0_start;
 } lya_grid_t;
 
-
+double lya_frecycle(double n);
 double lya_spectrum(lya_spectrum_t *thisSpectrum, double nu);
 void lya_filter(lya_grid_t *thisLya_grid, double n, fftw_complex *filter, double h, double omega_m, double z, lya_spectrum_t *thisSpectrum);
 void lya_convolve_fft(lya_grid_t *thisLya_grid, fftw_complex *filter, fftw_complex *output, fftw_complex *input);

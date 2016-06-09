@@ -23,6 +23,27 @@
 #define SQR(X) ((X)*(X))
 #define CUB(X) ((X)*(X)*(X))
 
+double lya_frecycle(double n)
+{
+	if(n == 2.){
+		return 1.;
+	}else if(n == 3.){
+		return 0.;
+	}else if(n == 4.){
+		return 0.26;
+	}else if(n == 5.){
+		return 0.31;
+	}else if(n == 6.){
+		return 0.32;
+	}else if(n == 7.){
+		return 0.33;
+	}else if(n < 10.){
+		return 0.34;
+	}else{
+		return 0.35;
+	}
+}
+
 double lya_spectrum(lya_spectrum_t *thisSpectrum, double nu)
 {
 	if(nu>thisSpectrum->nu_min)
@@ -39,7 +60,7 @@ void lya_filter(lya_grid_t *thisLya_grid, double n, fftw_complex *filter, double
 	const int local_n0 = thisLya_grid->local_n0;
 	const int half_nbins = nbins/2;
 	
-	const double factor = (thisLya_grid->box_size/h/(1.+z))/nbins;
+	const double factor = (thisLya_grid->box_size/h)/nbins*Mpc_cm;	//in comoving cm
 	const double sq_factor = factor*factor;
 
 	for(int i=0; i<local_n0; i++)
@@ -57,9 +78,11 @@ void lya_filter(lya_grid_t *thisLya_grid, double n, fftw_complex *filter, double
 				
 				const double expr = (sq_i_expr + sq_j_expr + sq_k_expr + epsilon)*sq_factor;
 				
-				double nu = nu_lyalimit*(1.-1./SQR(n))/SQR(1.-H0*sqrt(omega_m*(1.+z))/(2.*clight_cm)*sqrt(expr));
+				double nu = nu_lyalimit*(1.-1./SQR(n))/SQR(1.-h*100.*km_cm/Mpc_cm*sqrt(omega_m*(1.+z))/(2.*clight_cm)*sqrt(expr));
+// 				printf("nu = %e\t expr = %e\t%e\n", nu, sqrt(expr), h*100.*km_cm/Mpc_cm*sqrt(omega_m*(1.+z))/(2.*clight_cm)*sqrt(expr));
 				
-				filter[i*nbins*nbins+j*nbins+k] = lya_spectrum(thisSpectrum, nu)/(4.*M_PI*expr) + 0.*I;
+				filter[i*nbins*nbins+j*nbins+k] = lya_frecycle(n)*lya_spectrum(thisSpectrum, nu)*SQR(1.+z)/(4.*M_PI*expr) + 0.*I;
+// 				if(i==0 && j==0) printf("%d: lya_filter = %e\n", k, creal(filter[i*nbins*nbins+j*nbins+k]));
 			}
 		}
 	}
@@ -205,7 +228,7 @@ void lya_bg_source_emission(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpectr
 	}
 #endif
 	
-	for(int n=2; n<33; n++)
+	for(int n=2; n<24; n++)		//nmax from ionized sphere around sources (10pkpc at z=20 and 35pkpc at z=10)
 	{
 		/* construct filter */
 		lya_filter(thisLya_grid, (double)n, filter, thisCosmology->h, thisCosmology->omega_m, thisCosmology->z, thisSpectrum);
@@ -226,6 +249,7 @@ void lya_bg_lya_excitation(lya_grid_t *thisLya_grid, xray_grid_t *thisXray_grid,
 	int local_n0 = thisLya_grid->local_n0;
 	
 	double factor = SQR(lambda_lya)/(4.*M_PI*planck_cgs*clight_cm*thisCosmology->Hubble_z);
+	printf("factor = %e\n", factor);
 	
 	for(int i=0; i<local_n0; i++)
 	{
@@ -235,7 +259,11 @@ void lya_bg_lya_excitation(lya_grid_t *thisLya_grid, xray_grid_t *thisXray_grid,
 			{
 				double const heating = creal(thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeII[i*nbins*nbins+j*nbins+k]);
 				
-				if(heating<0.) printf("heating = %e\n", heating);
+				if(heating<0.) 
+				{
+					fprintf(stderr, "heating is negative!!! and has value = %e\nCheckyour x-ray heating!\nStopping execution.\n", heating);
+					exit(EXIT_FAILURE);
+				}
 				thisLya_grid->lya[i*nbins*nbins+j*nbins+k] = creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]) + heating*factor + 0.*I;
 			}
 		}
@@ -248,7 +276,7 @@ void lya_wouthuysen_coupling(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpect
 	int local_n0 = thisLya_grid->local_n0;
 	
 	/* compute comoving Lya flux */
-// 	lya_bg_source_emission(thisLya_grid, thisSpectrum, thisCosmology);
+	lya_bg_source_emission(thisLya_grid, thisSpectrum, thisCosmology);
 	lya_bg_lya_excitation(thisLya_grid, thisXray_grid, thisCosmology);
 	
 	/* compute prefactor for Lya coupling */
@@ -261,7 +289,7 @@ void lya_wouthuysen_coupling(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpect
 			{
 				thisLya_grid->lya[i*nbins*nbins+j*nbins+k] = creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]) + 0.*I;
 				
-				printf("lya = %e\n", creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]));
+// 				printf("lya = %e\n", creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]));
 			}
 		}
 	}
