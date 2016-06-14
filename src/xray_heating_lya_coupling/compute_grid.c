@@ -50,7 +50,7 @@ void compute_Tb_grid(grid_21cm_t *this21cmGrid, cosmology_t *thisCosmology)
 			for(int k=0; k<nbins; k++)
 			{
 				this21cmGrid->Tb[i*nbins*nbins+j*nbins+k] = factor*creal(this21cmGrid->XHI[i*nbins*nbins+j*nbins+k])*(1. - Tbg * creal(this21cmGrid->Ts_inv[i*nbins*nbins+j*nbins+k])) + 0.*I;
-				printf("factor = %e\t Tbg = %e\t Tb = %e\t Ts = %e\n", factor, Tbg, creal(this21cmGrid->Tb[i*nbins*nbins+j*nbins+k]), 1./creal(this21cmGrid->Ts_inv[i*nbins*nbins+j*nbins+k]));
+// 				printf("factor = %e\t Tbg = %e\t Tb = %e\t Ts = %e\n", factor, Tbg, creal(this21cmGrid->Tb[i*nbins*nbins+j*nbins+k]), 1./creal(this21cmGrid->Ts_inv[i*nbins*nbins+j*nbins+k]));
 			}
 		}
 	}

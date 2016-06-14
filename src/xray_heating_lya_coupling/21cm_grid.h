@@ -7,9 +7,16 @@ typedef struct
 	int nbins;
 	double box_size;
 	
+	double z_old;
+	fftw_complex *temp_old;
+	fftw_complex *dens_old;
+	fftw_complex *Xe_old;
+	
+	double z;
 	fftw_complex *temp;
 	fftw_complex *dens;
 	fftw_complex *Xe;
+	
 	fftw_complex *XHI;
 	fftw_complex *XHeI;
 	fftw_complex *XHeII;
@@ -34,3 +41,9 @@ void set_temperature_21cmgrid(grid_21cm_t *this21cmGrid, double value);
 void read_density_21cmgrid(grid_21cm_t *this21cmGrid, char *filename, int double_precision);
 
 double get_mean_Xe_21cmgrid(grid_21cm_t *this21cmGrid);
+double get_mean_temp_21cmgrid(grid_21cm_t *this21cmGrid);
+
+void write_Tb_field_file(grid_21cm_t *this21cmGrid, char *filename);
+void write_Ts_field_file(grid_21cm_t *this21cmGrid, char *filename);
+void write_Xe_field_file(grid_21cm_t *this21cmGrid, char *filename);
+void write_temp_field_file(grid_21cm_t *this21cmGrid, char *filename);

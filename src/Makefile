@@ -5,6 +5,7 @@ SOURCES := 	./main.c \
 		./ion_and_temp_evolution/recomb_rates.c \
 		./ion_and_temp_evolution/solve_ionfraction.c \
 		./ion_and_temp_evolution/solve_temperature.c \
+		./ion_and_temp_evolution/solve_ion_temp.c \
 		./xray_heating_lya_coupling/21cm_grid.c \
 		./xray_heating_lya_coupling/chem_const.c \
 		./xray_heating_lya_coupling/collisional_coupling.c \

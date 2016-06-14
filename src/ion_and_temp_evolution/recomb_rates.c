@@ -14,8 +14,8 @@
 #include "recomb_rates.h"
 
 double recHII(double temp){
-// 	return 6.28e-11/sqrt(temp)*pow(temp/1e3,-0.2)/(1.+pow(temp/1.e6,0.7));
-	return 2.6e-13*pow(temp/1.e4,-0.85);
+	return 6.28e-11/sqrt(temp)*pow(temp/1e3,-0.2)/(1.+pow(temp/1.e6,0.7));	//case A
+// 	return 2.6e-13*pow(temp/1.e4,-0.85);	//case B
 }
 
 double recHeII(double temp){

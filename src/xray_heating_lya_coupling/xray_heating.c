@@ -417,7 +417,6 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 	double *xray_filter_function_ionization;
 	
 	int nbins = thisXray_grid->nbins;
-	int local_n0 = thisXray_grid->local_n0;
 	
 	xray_params_t *xray_params;
 	

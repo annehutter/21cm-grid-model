@@ -84,7 +84,7 @@ double compute_Ts_inv(double Hubble_z_inv, double nH, double XHI, double couplin
 		xa_mod = coupling_alpha(coupling_alpha_prefac_z, calc_modSalpha(Hubble_z_inv, nHI, Tk_inv, Ts_inv), Jalpha);
 		Teff_inv = calc_Teff_inv(Tk_inv, Ts_inv);
 		Ts_inv = calc_Ts_inv(xa_mod, xc, Teff_inv, Tk_inv, Tbg_inv);
-		printf("%d: \txa_mod = %e\t Teff = %e\t xc = %e\t Ts = %e\t Tk = %e\n", i, xa_mod, 1./Teff_inv, xc,  1./Ts_inv, 1./Tk_inv);
+// 		printf("%d: \txa_mod = %e\t Teff = %e\t xc = %e\t Ts = %e\t Tk = %e\n", i, xa_mod, 1./Teff_inv, xc,  1./Ts_inv, 1./Tk_inv);
 	}
 	
 	return Ts_inv;

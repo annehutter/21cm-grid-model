@@ -28,6 +28,7 @@
 #include "ion_and_temp_evolution/solve_ionfraction.h"
 #include "ion_and_temp_evolution/solve_temperature.h"
 #include "ion_and_temp_evolution/evolution_loop.h"
+#include "ion_and_temp_evolution/solve_ion_temp.h"
 
 #include "evolution.h"
 
@@ -44,6 +45,202 @@ void update_21cmgrid(grid_21cm_t *this21cmGrid, cell_t *thisCell, int x, int y, 
 }
 
 void evolve()
+{
+/*-------------------------------------------------------------------------------------*/
+/* OUTPUT */
+/*-------------------------------------------------------------------------------------*/ 
+	char Tb_filename[128];
+	char Ts_filename[128];
+	char Xe_filename[128];
+	char temp_filename[128];
+	
+	char redshift_string[6];
+
+/*-------------------------------------------------------------------------------------*/
+/* COSMOLOGY */
+/*-------------------------------------------------------------------------------------*/
+	double h = 0.7;
+	double omega_m = 0.27;
+	double omega_b = 0.045;
+	double omega_l = 0.73;
+	
+	double Y = 0.24;
+	
+/*-------------------------------------------------------------------------------------*/
+/* XRAY Spectrum */
+/*-------------------------------------------------------------------------------------*/
+	double alphaX = -1.5;
+	double nuX_min = 0.1e3*ev_to_erg/planck_cgs;
+	double lumX = 3.4e40*100./(1.e3*ev_to_erg);
+	printf("alphaX = %e\t nuX_min = %e\t lumX = %e\n", alphaX, nuX_min, lumX);
+/*-------------------------------------------------------------------------------------*/
+/* LYA Spectrum */
+/*-------------------------------------------------------------------------------------*/
+	double alphaLya = -1.5;
+	double nuLya_min = 10.3*ev_to_erg/planck_cgs;
+	double lumLya = 3.4e40/(1.e3*ev_to_erg);
+
+/*-------------------------------------------------------------------------------------*/
+/* GRID */
+/*-------------------------------------------------------------------------------------*/
+	int nbins = 128;
+	int local_n0 = nbins;
+	double box_size = 80.;
+	
+	char densfile[128];
+	char xray_sourcefile[128];
+	char lya_sourcefile[128];
+	
+	for (int i=0; i<128; i++)
+	{
+		densfile[i] = '\0';
+		xray_sourcefile[i] = '\0';
+		lya_sourcefile[i] = '\0';
+	}
+	strcat(densfile, "/home/anne/PostdocSwinburne/grid_model_mpi/inputfiles/grid128/density11_ic.in");
+	strcat(xray_sourcefile, "/home/anne/PostdocSwinburne/grid_model_mpi/inputfiles/grid128/density11_ic.in");
+	strcat(lya_sourcefile, "/home/anne/PostdocSwinburne/grid_model_mpi/inputfiles/grid128/density11_ic.in");
+	
+/*-------------------------------------------------------------------------------------*/
+/* Initialize for ionization and temperature evolution */
+/*-------------------------------------------------------------------------------------*/
+	double zstart = 25.;
+	double zend = 10.;
+	double dz = 0.5;
+  
+	cell_t *cell;
+	cell = initCell_temp(14., 1.);
+	
+	recomb_t * recomb_rates;
+	recomb_rates = calcRecRate();
+	
+	int dim_matrix = 2;
+	
+/*-------------------------------------------------------------------------------------*/
+/* Initialize for 21cm computation */
+/*-------------------------------------------------------------------------------------*/
+
+	cosmology_t *thisCosmology;
+	
+	xray_grid_t *thisXray_grid;
+	xray_spectrum_t *thisXray_spectrum;
+	
+	lya_grid_t *thisLya_grid;
+	lya_spectrum_t *thisLya_spectrum;
+	
+	grid_21cm_t *this21cmGrid;
+	
+	k10_t *k10_table;
+	
+	int double_precision = 0;
+	
+	thisCosmology = allocate_cosmology(h, omega_m, omega_l, omega_b, zstart, Y);
+	
+	thisXray_grid = allocate_xray_grid(nbins, box_size);
+	thisXray_spectrum = allocate_xray_spectrum(lumX, alphaX, nuX_min);
+	
+	thisLya_grid = allocate_lya_grid(nbins, box_size);
+	thisLya_spectrum = allocate_lya_spectrum(lumLya, alphaLya, nuLya_min);
+	
+	this21cmGrid = allocate_21cmgrid(nbins, box_size);
+	
+	read_density_21cmgrid(this21cmGrid, densfile, double_precision);
+	read_lum_xraygrid(thisXray_grid, xray_sourcefile, double_precision);
+	read_lum_lyagrid(thisLya_grid, lya_sourcefile, double_precision);
+	
+	set_temperature_21cmgrid(this21cmGrid, 14.);
+	
+	k10_table = create_k10_table();
+	
+/*-------------------------------------------------------------------------------------*/
+/* REDSHIFT EVOLUTION */
+/*-------------------------------------------------------------------------------------*/
+
+	const double tmp_HI = 1./(boltzman_cgs*nu_HI);
+	const double tmp_HeI = 1./(boltzman_cgs*nu_HeI);
+	const double tmp_HeII = 1./(boltzman_cgs*nu_HeII);
+	
+	double fion_HI = 1.;
+	double fion_HeI = 1.;
+	double fion_HeII = 1.;
+	
+	double fheat = 1.;
+	
+	double Xe = 0.;
+	
+	double dz_tmp = dz;
+
+	this21cmGrid->z = zstart;
+	this21cmGrid->z_old = zstart;
+	
+	for(double z = zstart; z>zend; z = z-dz_tmp)
+	{
+		overwrite_old_values_21cmgrid(this21cmGrid);
+		printf("z = %e\t %e\n", z, fmod(z,dz));
+		cosmology_update_z(thisCosmology, z);
+		if(fmod(z,dz) == 0.)
+		{
+			Xe = get_mean_Xe_21cmgrid(this21cmGrid);
+			printf("Xe = %e\t T = %e\n", Xe, get_mean_temp_21cmgrid(this21cmGrid));
+			do_step_21cm_emission(thisCosmology, thisXray_grid, thisXray_spectrum, thisLya_grid, thisLya_spectrum, this21cmGrid, k10_table, Xe);
+		}
+		this21cmGrid->z = z-dz_tmp;
+		compute_temp_ion_grid(this21cmGrid, recomb_rates, thisCosmology, thisXray_grid);
+		
+		sprintf(redshift_string, "%3.1f", z);
+		for(int i=0; i<128; i++)
+		{
+			Tb_filename[i] = '\0';
+			Ts_filename[i] = '\0';
+			Xe_filename[i] = '\0';
+			temp_filename[i] = '\0';
+		}
+		strcat(Tb_filename, "output_Tb_z");
+		strcat(Tb_filename, redshift_string);
+		strcat(Tb_filename, ".dat");
+		write_Tb_field_file(this21cmGrid, Tb_filename);
+		
+		strcat(Ts_filename, "output_Ts_z");
+		strcat(Ts_filename, redshift_string);
+		strcat(Ts_filename, ".dat");
+		write_Ts_field_file(this21cmGrid, Ts_filename);
+		
+		strcat(Xe_filename, "output_Xe_z");
+		strcat(Xe_filename, redshift_string);
+		strcat(Xe_filename, ".dat");
+		write_Xe_field_file(this21cmGrid, Xe_filename);
+		
+		strcat(temp_filename, "output_temp_z");
+		strcat(temp_filename, redshift_string);
+		strcat(temp_filename, ".dat");
+		write_temp_field_file(this21cmGrid, temp_filename);
+	}
+	  
+	  
+/*-------------------------------------------------------------------------------------*/
+/* Deallocate ionization and temperature evolution structs */
+/*-------------------------------------------------------------------------------------*/
+	deallocate_recomb(recomb_rates);
+	deallocate_cell(cell);
+	
+/*-------------------------------------------------------------------------------------*/
+/* Deallocate 21cm computation structs */
+/*-------------------------------------------------------------------------------------*/
+	deallocate_cosmology(thisCosmology);
+	
+	deallocate_xray_grid(thisXray_grid);
+	deallocate_xray_spectrum(thisXray_spectrum);
+	
+	deallocate_lya_grid(thisLya_grid);
+	deallocate_lya_spectrum(thisLya_spectrum);
+	
+	deallocate_21cmgrid(this21cmGrid);
+	
+	deallocate_k10_table(k10_table);
+}
+
+
+void evolve_old()
 {
 /*-------------------------------------------------------------------------------------*/
 /* COSMOLOGY */
