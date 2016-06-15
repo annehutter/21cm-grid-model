@@ -71,7 +71,7 @@ void evolve()
 /*-------------------------------------------------------------------------------------*/
 	double alphaX = -1.5;
 	double nuX_min = 0.1e3*ev_to_erg/planck_cgs;
-	double lumX = 3.4e40*100./(1.e3*ev_to_erg);
+	double lumX = 3.4e40/(1.e3*ev_to_erg);
 	printf("alphaX = %e\t nuX_min = %e\t lumX = %e\n", alphaX, nuX_min, lumX);
 /*-------------------------------------------------------------------------------------*/
 /* LYA Spectrum */

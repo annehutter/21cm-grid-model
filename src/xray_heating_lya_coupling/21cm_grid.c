@@ -223,7 +223,12 @@ double get_mean_Xe_21cmgrid(grid_21cm_t *this21cmGrid)
 		{
 			for(int k=0; k<nbins; k++)
 			{
-				sum += this21cmGrid->Xe[i*nbins*nbins+j*nbins+k];
+				if(isnan(creal(this21cmGrid->Xe[i*nbins*nbins+j*nbins+k]))){
+					printf("Xe is nan!\n");
+					sum += 1.;
+				}else{
+					sum += this21cmGrid->Xe[i*nbins*nbins+j*nbins+k];
+				}
 			}
 		}
 	}

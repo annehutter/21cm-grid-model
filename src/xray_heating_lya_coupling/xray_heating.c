@@ -343,29 +343,32 @@ void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter
 	double omega_m = xray_params->omega_m;
 	double z = xray_params->zp;	//redshift of frame of absorption
 	
-	double eps = (thisXray_grid->box_size/h)*epsilon/nbins*Mpc_cm;
+	double const prefactor = (thisXray_grid->box_size/h)/nbins*Mpc_cm;
+	double const eps = prefactor*epsilon;
 	
 	for(int i=0; i<nbins; i++)
 	{
-		const double x = (thisXray_grid->box_size/h)*i/nbins*Mpc_cm;	//in comoving cm
+		const double x = prefactor*i;	//in comoving cm
 		xray_params->x = x;
 			
 		/* compute 1+z', z' is redshift at x */
 		const double tmp = z_distance_to_redshift(z, x, h, omega_m);
 		xray_params->z = tmp - 1.;	//redshift of emitter frame
 		
+		double const vol_emission = CUB((thisXray_grid->box_size/h)/nbins);
+
 		if(type == 0)
 		{
-			xray_filter_heating[i] = xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
-			xray_filter_ionization[i] = xray_ionization_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+			xray_filter_heating[i] = xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
+			xray_filter_ionization[i] = xray_ionization_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
 		}else if(type == 1)
 		{
-			xray_filter_heating[i] = xray_heating_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
-			xray_filter_ionization[i] = xray_ionization_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+			xray_filter_heating[i] = xray_heating_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
+			xray_filter_ionization[i] = xray_ionization_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
 		}else if(type ==2)
 		{
-			xray_filter_heating[i] = xray_heating_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
-			xray_filter_ionization[i] = xray_ionization_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+			xray_filter_heating[i] = xray_heating_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
+			xray_filter_ionization[i] = xray_ionization_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
 		}
 // 		printf("x = %e\t z_em = %e\t heating[%d] = %e\t ionization[%d] = %e\n", x, tmp-1., i, xray_filter_heating[i], i, xray_filter_ionization[i]);
 	}
