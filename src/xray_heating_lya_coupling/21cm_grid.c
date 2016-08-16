@@ -86,6 +86,7 @@ grid_21cm_t *allocate_21cmgrid(int nbins, float box_size)
 	
 	this21cmGrid->local_n0 = nbins;
 	this21cmGrid->local_0_start = 0;
+    local_n0 = nbins;
 #ifdef __MPI	
 	alloc_local = fftw_mpi_local_size_3d(nbins, nbins, nbins, MPI_COMM_WORLD, &local_n0, &local_0_start);
 	
@@ -234,6 +235,8 @@ double get_mean_Xe_21cmgrid(grid_21cm_t *this21cmGrid)
 	}
 #ifdef __MPI
 	MPI_Allreduce(&sum, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+    result = sum;
 #endif
 	result /= (nbins*nbins*nbins);
 	
@@ -259,6 +262,8 @@ double get_mean_temp_21cmgrid(grid_21cm_t *this21cmGrid)
 	}
 #ifdef __MPI
 	MPI_Allreduce(&sum, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+    result = sum;
 #endif
 	result /= (nbins*nbins*nbins);
 	

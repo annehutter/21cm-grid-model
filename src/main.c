@@ -3,6 +3,8 @@
 #include <gsl/gsl_math.h>	//included because M_PI is not defined in <math.h>
 #include <assert.h>
 #include <complex.h>
+#include <time.h>
+#include <string.h>
 
 #ifdef __MPI
 #include <fftw3-mpi.h>
@@ -28,6 +30,7 @@
 #include "ion_and_temp_evolution/solve_temperature.h"
 #include "ion_and_temp_evolution/evolution_loop.h"
 
+#include "confObj.h"
 #include "evolution.h"
 
 
@@ -37,6 +40,9 @@ int main (int argc, /*const*/ char * argv[]) {
 #endif
 	int myRank = 0;
 	
+    char iniFile[1000];
+    confObj_t simParam;
+        
 	double t1, t2;
 
 #ifdef __MPI
@@ -49,22 +55,25 @@ int main (int argc, /*const*/ char * argv[]) {
 	fftw_mpi_init();
 #else
 	t1 = time(NULL);
-	
-	fftw_init();
 #endif
-	
-	evolve();
-	
+    
 	//parse command line arguments and be nice to user
-// 	if (argc != 2) {
-// 		printf("cifog: (C)  - Use at own risk...\n");
-// 		printf("USAGE:\n");
-// 		printf("cifog iniFile\n");
-// 		
-// 		exit(EXIT_FAILURE);
-// 	} else {
-// // 		strcpy(iniFile, argv[1]);
-// 	}
+	if (argc != 2) {
+		printf("cifog: (C)  - Use at own risk...\n");
+		printf("USAGE:\n");
+		printf("cifog iniFile\n");
+		
+		exit(EXIT_FAILURE);
+	} else {
+		strcpy(iniFile, argv[1]);
+	}
+	
+    //read paramter file
+	simParam = readConfObj(iniFile);
+	
+    evolve(simParam);
+
+    confObj_del(&simParam);
 	
 	if(myRank==0) printf("Finished\n");
 #ifdef __MPI

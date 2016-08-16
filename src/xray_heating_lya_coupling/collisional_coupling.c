@@ -23,8 +23,8 @@ k10_t *create_k10_table()
 	thisTable = malloc(sizeof(k10_t));
 	
 	thisTable->num_HH= 19;
-	thisTable->T_HH = malloc(thisTable->num*sizeof(double));
-	thisTable->k10_HH = malloc(thisTable->num*sizeof(double));
+	thisTable->T_HH = malloc(thisTable->num_HH*sizeof(double));
+	thisTable->k10_HH = malloc(thisTable->num_HH*sizeof(double));
 	
 	thisTable->T_HH[0] = 1.;
 	thisTable->T_HH[1] = 2.;

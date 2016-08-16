@@ -44,8 +44,8 @@ void lya_filter(lya_grid_t *thisLya_grid, double n, fftw_complex *filter, double
 void lya_convolve_fft(lya_grid_t *thisLya_grid, fftw_complex *filter, fftw_complex *output, fftw_complex *input);
 void lya_add_modes(lya_grid_t *thisLya_grid, fftw_complex *thisLya_mode);
 void lya_bg_source_emission(lya_grid_t *thisLya_grid, lya_spectrum_t*thisSpectrum, cosmology_t *thisCosmology);
-void lya_bg_lya_excitation(lya_grid_t *thisLya_grid, xray_grid_t *thisXray_grid, cosmology_t *thisCosmology);
-void lya_wouthuysen_coupling(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpectrum, xray_grid_t *thisXray_grid, cosmology_t *thisCosmology);
+// void lya_bg_lya_excitation(lya_grid_t *thisLya_grid, xray_grid_t *thisXray_grid, cosmology_t *thisCosmology);
+// void lya_wouthuysen_coupling(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpectrum, xray_grid_t *thisXray_grid, cosmology_t *thisCosmology);
 
 double TCMB(double z);
 

@@ -1,11 +1,19 @@
 SOURCES := 	./main.c \
+		./confObj.c \
 		./evolution.c \
+		./inputs.c \
+		./outputs.c \
+		./parse_ini.c \
+		./utils.c \
+		./xmem.c \
+		./xstring.c \
 		./ion_and_temp_evolution/cell.c \
 		./ion_and_temp_evolution/evolution_loop.c \
 		./ion_and_temp_evolution/recomb_rates.c \
 		./ion_and_temp_evolution/solve_ionfraction.c \
 		./ion_and_temp_evolution/solve_temperature.c \
 		./ion_and_temp_evolution/solve_ion_temp.c \
+		./ion_and_temp_evolution/fractions_heat_ion.c \
 		./xray_heating_lya_coupling/21cm_grid.c \
 		./xray_heating_lya_coupling/chem_const.c \
 		./xray_heating_lya_coupling/collisional_coupling.c \
@@ -22,8 +30,6 @@ SOURCES := 	./main.c \
 OBJECTS := $(SOURCES:.c=.o)
 DOBJECTS := $(SOURCES:.c=.d)
 EXECUTABLE := 21CMGRID
-
-USE-MPI = YES
 
 OPTIMIZE = -O3 -ftree-vectorize
 WARNING = -Wall -Wextra -Wshadow -g

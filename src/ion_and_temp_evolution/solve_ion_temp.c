@@ -22,6 +22,7 @@
 #include "../xray_heating_lya_coupling/compute_grid.h"
 
 #include "recomb_rates.h"
+#include "fractions_heat_ion.h"
 #include "solve_ion_temp.h"
 
 #define SQR(X) ((X)*(X))
@@ -116,7 +117,8 @@ void compute_temp_ion_grid(grid_21cm_t *this21cmGrid, recomb_t *thisRecombRates,
 	
 	printf("factor = %e\t sqrt_cub_z = %e\t sqrt_cub_z_old = %e\n", factor, sqrt_cub_z, sqrt_cub_z_old);
 	
-	double gamma;
+    double Xe;
+	double gamma, gamma_heat;
 	double xray_heating;
 	double D = 1.;
 	
@@ -126,15 +128,18 @@ void compute_temp_ion_grid(grid_21cm_t *this21cmGrid, recomb_t *thisRecombRates,
 		{
 			for(int k=0; k<nbins; k++)
 			{
-				gamma = (thisXray_grid->xray_ionization_HI[i*nbins*nbins+j*nbins+k] + thisXray_grid->xray_ionization_HeI[i*nbins*nbins+j*nbins+k])*(1.-this21cmGrid->Xe[i*nbins*nbins+j*nbins+k]);
+                Xe = this21cmGrid->Xe[i*nbins*nbins+j*nbins+k];
+                
+				gamma = (thisXray_grid->xray_ionization_HI[i*nbins*nbins+j*nbins+k] + thisXray_grid->xray_ionization_HeI[i*nbins*nbins+j*nbins+k])*(1.-Xe);
+                gamma_heat = (thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k] + thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k])*(1.-Xe)*(fion_HI(Xe)/(planck_cgs*nu_HI) + fion_HeI(Xe)/(planck_cgs*nu_HeI));
 				
-				xray_heating = (thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k] + thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k])*(1.-this21cmGrid->Xe[i*nbins*nbins+j*nbins+k]);
+				xray_heating = (thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k] + thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k])*(1.-Xe)*fheat(Xe);
 				
 // 				printf("gamma = %e\t heating = %e\n", gamma, xray_heating);
 				
 				index = i*nbins*nbins+j*nbins+k;
 				
-				this21cmGrid->Xe[i*nbins*nbins+j*nbins+k] = update_ion(this21cmGrid, thisRecombRates, index, z, z_old, gamma, n, Hubble);
+				this21cmGrid->Xe[i*nbins*nbins+j*nbins+k] = update_ion(this21cmGrid, thisRecombRates, index, z, z_old, gamma+gamma_heat, n, Hubble);
 				this21cmGrid->temp[i*nbins*nbins+j*nbins+k] = update_temp(this21cmGrid, index, sqrt_cub_z, sqrt_cub_z_old, factor, xray_heating, Hubble);
 				
 				this21cmGrid->dens[i*nbins*nbins+j*nbins+k] = update_dens(this21cmGrid, index, D);

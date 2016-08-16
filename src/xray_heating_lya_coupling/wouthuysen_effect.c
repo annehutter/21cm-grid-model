@@ -239,61 +239,67 @@ void lya_bg_source_emission(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpectr
 		lya_add_modes(thisLya_grid, thisLya_mode);
 	}
 	
+#ifdef __MPI
+    write_grid_to_file_float(thisLya_grid->lya, nbins, local_n0, local_0_start, "Lya_grid.dat");
+#else
+    write_grid_to_file_float(thisLya_grid->lya, nbins, local_n0, "Lya_grid.dat");
+#endif
+	
 	fftw_free(thisLya_mode);
 	fftw_free(filter);
 }
 
-void lya_bg_lya_excitation(lya_grid_t *thisLya_grid, xray_grid_t *thisXray_grid, cosmology_t *thisCosmology)
-{
-	int nbins = thisLya_grid->nbins;
-	int local_n0 = thisLya_grid->local_n0;
-	
-	double factor = SQR(lambda_lya)/(4.*M_PI*planck_cgs*clight_cm*thisCosmology->Hubble_z);
-	printf("factor = %e\n", factor);
-	
-	for(int i=0; i<local_n0; i++)
-	{
-		for(int j=0; j<nbins; j++)
-		{
-			for(int k=0; k<nbins; k++)
-			{
-				double const heating = creal(thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeII[i*nbins*nbins+j*nbins+k]);
-				
-				if(heating<0.) 
-				{
-					fprintf(stderr, "heating is negative!!! and has value = %e\nCheckyour x-ray heating!\nStopping execution.\n", heating);
-					exit(EXIT_FAILURE);
-				}
-				thisLya_grid->lya[i*nbins*nbins+j*nbins+k] = creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]) + heating*factor + 0.*I;
-			}
-		}
-	}
-}
-
-void lya_wouthuysen_coupling(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpectrum, xray_grid_t *thisXray_grid, cosmology_t *thisCosmology)
-{
-	int nbins = thisLya_grid->nbins;
-	int local_n0 = thisLya_grid->local_n0;
-	
-	/* compute comoving Lya flux */
-	lya_bg_source_emission(thisLya_grid, thisSpectrum, thisCosmology);
-	lya_bg_lya_excitation(thisLya_grid, thisXray_grid, thisCosmology);
-	
-	/* compute prefactor for Lya coupling */
-	
-	for(int i=0; i<local_n0; i++)
-	{
-		for(int j=0; j<nbins; j++)
-		{
-			for(int k=0; k<nbins; k++)
-			{
-				thisLya_grid->lya[i*nbins*nbins+j*nbins+k] = creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]) + 0.*I;
-				
-// 				printf("lya = %e\n", creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]));
-			}
-		}
-	}
-}
+// void lya_bg_lya_excitation(lya_grid_t *thisLya_grid, xray_grid_t *thisXray_grid, cosmology_t *thisCosmology)
+// {
+// 	int nbins = thisLya_grid->nbins;
+// 	int local_n0 = thisLya_grid->local_n0;
+// 	
+// 	double factor = SQR(lambda_lya)/(4.*M_PI*planck_cgs*clight_cm*thisCosmology->Hubble_z);
+// 	printf("factor = %e\n", factor);
+// 	
+// 	for(int i=0; i<local_n0; i++)
+// 	{
+// 		for(int j=0; j<nbins; j++)
+// 		{
+// 			for(int k=0; k<nbins; k++)
+// 			{
+// 				double const heating = creal(thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeII[i*nbins*nbins+j*nbins+k]);
+// 				
+// 				if(heating<0.) 
+// 				{
+// 					fprintf(stderr, "heating is negative!!! and has value = %e\nCheckyour x-ray heating!\nStopping execution.\n", heating);
+// 					exit(EXIT_FAILURE);
+// 				}
+// 				thisLya_grid->lya[i*nbins*nbins+j*nbins+k] = creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]) + heating*factor + 0.*I;
+// 			}
+// 		}
+// 	}
+// }
+// 
+// void lya_wouthuysen_coupling(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpectrum, xray_grid_t *thisXray_grid, cosmology_t *thisCosmology)
+// {
+// 	int nbins = thisLya_grid->nbins;
+// 	int local_n0 = thisLya_grid->local_n0;
+// 	
+// 	/* compute comoving Lya flux */
+// 	lya_bg_source_emission(thisLya_grid, thisSpectrum, thisCosmology);
+// 	lya_bg_lya_excitation(thisLya_grid, thisXray_grid, thisCosmology);
+// 	
+// 	/* compute prefactor for Lya coupling */
+// 	
+// 	for(int i=0; i<local_n0; i++)
+// 	{
+// 		for(int j=0; j<nbins; j++)
+// 		{
+// 			for(int k=0; k<nbins; k++)
+// 			{
+// 				thisLya_grid->lya[i*nbins*nbins+j*nbins+k] = creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]) + 0.*I;
+// 				
+// // 				printf("lya = %e\n", creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]));
+// 			}
+// 		}
+// 	}
+// }
 
 
 
@@ -399,13 +405,14 @@ lya_grid_t *allocate_lya_grid(int nbins, float box_size)
 	ptrdiff_t local_n0;
 #endif
 	lya_grid_t *thisLya_grid;
-
 	thisLya_grid = initLya_grid();
-	
+    
 	thisLya_grid->nbins = nbins;
 	thisLya_grid->box_size = box_size;
 	
 	thisLya_grid->local_n0 = nbins;
+    local_n0 = nbins;
+    
 #ifdef __MPI
 	fftw_mpi_init();
 	
@@ -418,11 +425,11 @@ lya_grid_t *allocate_lya_grid(int nbins, float box_size)
 	thisLya_grid->lya_lum = fftw_alloc_complex(alloc_local);
 	
 #else
-	thisLya_grid->lya = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*local_n0*nbins*nbins);
+    thisLya_grid->lya = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*local_n0*nbins*nbins);
 	thisLya_grid->lya_lum = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*local_n0*nbins*nbins);
 #endif
 	initialize_lya_grid(thisLya_grid);
-	
+
 	return thisLya_grid;
 }
 
@@ -430,7 +437,7 @@ void initialize_lya_grid(lya_grid_t *thisLya_grid)
 {
 	int nbins = thisLya_grid->nbins;
 	int local_n0 = thisLya_grid->local_n0;
-	
+	    
 	for(int i=0; i<local_n0; i++)
 	{
 		for(int j=0; j<nbins; j++)

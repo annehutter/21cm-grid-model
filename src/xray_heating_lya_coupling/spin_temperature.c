@@ -11,6 +11,8 @@
 #include <fftw3.h>
 #endif
 
+#include "../ion_and_temp_evolution/fractions_heat_ion.h"
+
 #include "phys_const.h"
 #include "chem_const.h"
 #include "cosmology.h"
@@ -120,7 +122,7 @@ void compute_Ts_on_grid(lya_grid_t *thisLya_grid, k10_t *k10_table, grid_21cm_t 
 			{
 				dens = creal(this21cmGrid->dens[i*nbins*nbins+j*nbins+k]);
 				nH = thisCosmology->nH_z*dens;
-				XHI = creal(this21cmGrid->XHI[i*nbins*nbins+j*nbins+k]);
+				XHI = 1.-creal(this21cmGrid->Xe[i*nbins*nbins+j*nbins+k]);
 				Jalpha = creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]);
 				Tk = creal(this21cmGrid->temp[i*nbins*nbins+j*nbins+k]);
 				xc = coupling_coll(z, nH, k10_table, Tk);
@@ -134,3 +136,43 @@ void compute_Ts_on_grid(lya_grid_t *thisLya_grid, k10_t *k10_table, grid_21cm_t 
 	}
 }
 
+/*--------------------------------------------------------------------------------------------------*/
+/* Wouthuysen coupling */
+
+void lya_wouthuysen_coupling(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpectrum, xray_grid_t *thisXray_grid, grid_21cm_t *this21cmGrid, cosmology_t *thisCosmology)
+{
+    int nbins = thisLya_grid->nbins;
+	int local_n0 = thisLya_grid->local_n0;
+	
+	/* compute comoving Lya flux */
+	lya_bg_source_emission(thisLya_grid, thisSpectrum, thisCosmology);
+	lya_bg_lya_excitation(thisLya_grid, thisXray_grid, this21cmGrid, thisCosmology);
+}
+
+void lya_bg_lya_excitation(lya_grid_t *thisLya_grid, xray_grid_t *thisXray_grid, grid_21cm_t *this21cmGrid, cosmology_t *thisCosmology)
+{
+	int nbins = thisLya_grid->nbins;
+	int local_n0 = thisLya_grid->local_n0;
+	
+	double factor = SQR(lambda_lya)/(4.*M_PI*planck_cgs*clight_cm*thisCosmology->Hubble_z);
+	
+	for(int i=0; i<local_n0; i++)
+	{
+		for(int j=0; j<nbins; j++)
+		{
+			for(int k=0; k<nbins; k++)
+			{
+                double const Xe = this21cmGrid->Xe[i*nbins*nbins+j*nbins+k];
+                
+				double const heating = creal(thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeII[i*nbins*nbins+j*nbins+k]);
+				
+				if(heating<0.) 
+				{
+					fprintf(stderr, "heating is negative!!! and has value = %e\nCheckyour x-ray heating!\nStopping execution.\n", heating);
+					exit(EXIT_FAILURE);
+				}
+				thisLya_grid->lya[i*nbins*nbins+j*nbins+k] = creal(thisLya_grid->lya[i*nbins*nbins+j*nbins+k]) + heating*flya(Xe)*factor + 0.*I;
+            }
+		}
+	}
+}

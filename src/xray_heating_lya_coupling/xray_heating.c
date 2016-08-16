@@ -157,6 +157,7 @@ double xray_heating_function_HI(double nu, void *p)
 	double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
 	
 	if(mfp <= 1. && nu >= params->nu_min/factor){	// nu_min is in reference frame of emitter, i.e. z
+//         printf("           %e\t%e\t%e\t%e\t%e\t%e\n",nu, params->emission*pow(nu*factor,params->alphaX)*planck_cgs*(nu-nu_HI)*cross_sec_HI(nu),  params->emission, pow(nu*factor,params->alphaX), planck_cgs*(nu-nu_HI),cross_sec_HI(nu));
 		return params->emission*pow(nu*factor,params->alphaX)*planck_cgs*(nu-nu_HI)*cross_sec_HI(nu);
 	}else{
 		return 0.;
@@ -346,6 +347,7 @@ void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter
 	double const prefactor = (thisXray_grid->box_size/h)/nbins*Mpc_cm;
 	double const eps = prefactor*epsilon;
 	
+    
 	for(int i=0; i<nbins; i++)
 	{
 		const double x = prefactor*i;	//in comoving cm
@@ -357,18 +359,21 @@ void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter
 		
 		double const vol_emission = CUB((thisXray_grid->box_size/h)/nbins);
 
+//         printf("SQR(1.+z)/(4.*M_PI*SQR(x + eps)) = %e\n", SQR(1.+z)/(4.*M_PI*SQR(x + eps)));
+//         printf("xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4) = %e\n", xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4));
+        
 		if(type == 0)
 		{
-			xray_filter_heating[i] = xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
-			xray_filter_ionization[i] = xray_ionization_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
+			xray_filter_heating[i] = xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+			xray_filter_ionization[i] = xray_ionization_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
 		}else if(type == 1)
 		{
-			xray_filter_heating[i] = xray_heating_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
-			xray_filter_ionization[i] = xray_ionization_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
+			xray_filter_heating[i] = xray_heating_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+			xray_filter_ionization[i] = xray_ionization_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
 		}else if(type ==2)
 		{
-			xray_filter_heating[i] = xray_heating_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
-			xray_filter_ionization[i] = xray_ionization_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps))*vol_emission;
+			xray_filter_heating[i] = xray_heating_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+			xray_filter_ionization[i] = xray_ionization_HeII_calc_integral(*xray_params, nu_HeII, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
 		}
 // 		printf("x = %e\t z_em = %e\t heating[%d] = %e\t ionization[%d] = %e\n", x, tmp-1., i, xray_filter_heating[i], i, xray_filter_ionization[i]);
 	}
@@ -443,7 +448,7 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 	xray_params->omega_m = thisCosmology->omega_m;
 	xray_params->omega_l = thisCosmology->omega_l;
 
-// 	printf("xray heating and ionization: initialisation done\n");
+	printf("xray heating and ionization: initialisation done\n");
 	
 	/* allocating space for filters for heating and ionization */
 	xray_filter_heating = (fftw_complex*)malloc(sizeof(fftw_complex)*nbins*nbins*nbins);
@@ -458,8 +463,7 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 		fprintf(stderr, "xray_filter_ionization in xray_heating (xray_heating.c) could not be allocated\n");
 		exit(EXIT_FAILURE);
 	}
-	
-	
+		
 	xray_filter_function_heating = (double*)malloc(sizeof(double)*nbins);
 	if(xray_filter_function_heating == NULL)
 	{
@@ -473,9 +477,10 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
 		exit(EXIT_FAILURE);
 	}
 	
+	
 	for(int type=0; type<3; type++)
 	{
-// 		printf("building filter function for type %d\n", type);
+		printf("building filter function for type %d\n", type);
 		/* build the filter function */
 		xray_build_filter_functions(thisXray_grid, xray_filter_function_heating, xray_filter_function_ionization, xray_params, type);
 		
@@ -717,6 +722,8 @@ xray_grid_t *allocate_xray_grid(int nbins, float box_size)
 	
 	thisXray_grid->local_n0 = nbins;
 	thisXray_grid->local_0_start = 0;
+    
+    local_n0 = nbins;
 #ifdef __MPI
 	alloc_local = fftw_mpi_local_size_3d(nbins, nbins, nbins, MPI_COMM_WORLD, &local_n0, &local_0_start);
 	
@@ -777,4 +784,15 @@ void read_lum_xraygrid(xray_grid_t *thisXray_grid, char *filename, int double_pr
 	read_grid(thisXray_grid->xray_lum, nbins, local_n0, filename);
 #endif
 	}
+	
+//     for(int i=0; i<local_n0; i++)
+// 	{
+// 		for(int j=0; j<nbins; j++)
+// 		{
+// 			for(int k=0; k<nbins; k++)
+// 			{
+// 				printf("%e\n", creal(thisXray_grid->xray_lum[i*nbins*nbins+j*nbins+k]));
+// 			}
+// 		}
+// 	}
 }

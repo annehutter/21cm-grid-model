@@ -65,7 +65,7 @@ void do_step_21cm_emission(cosmology_t *thisCosmology, xray_grid_t *thisXray_gri
   	printf("do_step_21cm_emission: xray heating and ionization done\n");
 
 	/* compute wouthuysen coupling */
-	lya_wouthuysen_coupling(thisLya_grid, thisLya_spectrum, thisXray_grid, thisCosmology);
+	lya_wouthuysen_coupling(thisLya_grid, thisLya_spectrum, thisXray_grid, this21cmGrid, thisCosmology);
 	printf("do_step_21cm_emission: lya coupling done\n");
 
 	/* compute the spin temperature */
