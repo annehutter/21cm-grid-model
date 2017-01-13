@@ -139,7 +139,7 @@ void update_21cmgrid(grid_21cm_t *this21cmGrid, cell_t *thisCell, int x, int y, 
 
 double *create_redshift_table(inputlist_t *thisInputlist, double zstart, double zend, double dz)
 {
-    int num = thisInputlist->num + (zstart-zend)/dz;
+    int num = thisInputlist->num + (zstart-zend)/dz + 1;
     
     double *redshift;
     double z; 
@@ -151,11 +151,20 @@ double *create_redshift_table(inputlist_t *thisInputlist, double zstart, double 
     snap = 0;
     for(int i=0; i<num; i++)
     {
-        if(thisInputlist->redshift[snap] > z)
+        if(thisInputlist->redshift[snap] >= z)
         {
+            printf("adding from list item %d\n", snap);
             redshift[i] = thisInputlist->redshift[snap];
+            
+            if(redshift[i] == z)
+            {
+                num--;
+                z = z - dz;
+            }
+            
             snap++;
         }else{
+            printf("normal %e\n",z);
             redshift[i] = z;
             z = z -dz;
         }
@@ -351,7 +360,7 @@ void evolve(confObj_t simParam)
             mkdir("output/Tb", 0755);
         }
         strcat(Tb_filename, "output/Tb/");
-		strcat(Tb_filename, "output_Tb_z");
+		strcat(Tb_filename, "Tb_z");
 		strcat(Tb_filename, redshift_string);
 		strcat(Tb_filename, ".dat");
 		write_Tb_field_file(this21cmGrid, Tb_filename);
@@ -362,7 +371,7 @@ void evolve(confObj_t simParam)
             mkdir("output/Ts", 0755);
         }
         strcat(Ts_filename, "output/Ts/");
-		strcat(Ts_filename, "output_Ts_z");
+		strcat(Ts_filename, "Ts_z");
 		strcat(Ts_filename, redshift_string);
 		strcat(Ts_filename, ".dat");
 		write_Ts_field_file(this21cmGrid, Ts_filename);
@@ -373,7 +382,7 @@ void evolve(confObj_t simParam)
             mkdir("output/Xe", 0755);
         }
         strcat(Xe_filename, "output/Xe/");
-		strcat(Xe_filename, "output_Xe_z");
+		strcat(Xe_filename, "Xe_z");
 		strcat(Xe_filename, redshift_string);
 		strcat(Xe_filename, ".dat");
 		write_Xe_field_file(this21cmGrid, Xe_filename);
@@ -384,7 +393,7 @@ void evolve(confObj_t simParam)
             mkdir("output/temp", 0755);
         }
         strcat(temp_filename, "output/temp/");
-		strcat(temp_filename, "output_temp_z");
+		strcat(temp_filename, "temp_z");
 		strcat(temp_filename, redshift_string);
 		strcat(temp_filename, ".dat");
 		write_temp_field_file(this21cmGrid, temp_filename);
