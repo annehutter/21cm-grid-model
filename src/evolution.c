@@ -5,6 +5,10 @@
 #include <assert.h>
 #include <complex.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #ifdef __MPI
 #include <fftw3-mpi.h>
 #include <mpi.h>
@@ -324,6 +328,14 @@ void evolve(confObj_t simParam)
 		
         
         /* OUTPUT */
+        
+        struct stat st;
+        
+        if (stat("output", &st) == -1) 
+        {
+            printf("creating directory\n");
+            mkdir("output", 0755);
+        }
 		sprintf(redshift_string, "%3.1f", z);
 		for(int i=0; i<128; i++)
 		{
@@ -332,21 +344,46 @@ void evolve(confObj_t simParam)
 			Xe_filename[i] = '\0';
 			temp_filename[i] = '\0';
 		}
+		
+        if (stat("output/Tb", &st) == -1) 
+        {
+            printf("creating directory\n");
+            mkdir("output/Tb", 0755);
+        }
+        strcat(Tb_filename, "output/Tb/");
 		strcat(Tb_filename, "output_Tb_z");
 		strcat(Tb_filename, redshift_string);
 		strcat(Tb_filename, ".dat");
 		write_Tb_field_file(this21cmGrid, Tb_filename);
 		
+        if (stat("output/Ts", &st) == -1) 
+        {
+            printf("creating directory\n");
+            mkdir("output/Ts", 0755);
+        }
+        strcat(Ts_filename, "output/Ts/");
 		strcat(Ts_filename, "output_Ts_z");
 		strcat(Ts_filename, redshift_string);
 		strcat(Ts_filename, ".dat");
 		write_Ts_field_file(this21cmGrid, Ts_filename);
 		
+        if (stat("output/Xe", &st) == -1) 
+        {
+            printf("creating directory\n");
+            mkdir("output/Xe", 0755);
+        }
+        strcat(Xe_filename, "output/Xe/");
 		strcat(Xe_filename, "output_Xe_z");
 		strcat(Xe_filename, redshift_string);
 		strcat(Xe_filename, ".dat");
 		write_Xe_field_file(this21cmGrid, Xe_filename);
 		
+        if (stat("output/temp", &st) == -1) 
+        {
+            printf("creating directory\n");
+            mkdir("output/temp", 0755);
+        }
+        strcat(temp_filename, "output/temp/");
 		strcat(temp_filename, "output_temp_z");
 		strcat(temp_filename, redshift_string);
 		strcat(temp_filename, ".dat");

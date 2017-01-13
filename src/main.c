@@ -30,6 +30,7 @@
 #include "ion_and_temp_evolution/solve_temperature.h"
 #include "ion_and_temp_evolution/evolution_loop.h"
 
+#include "inputs.h"
 #include "confObj.h"
 #include "evolution.h"
 

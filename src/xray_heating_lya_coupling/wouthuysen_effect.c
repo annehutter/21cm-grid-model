@@ -4,6 +4,10 @@
 #include <assert.h>
 #include <complex.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #ifdef __MPI
 #include <fftw3-mpi.h>
 #include <mpi.h>
@@ -239,10 +243,16 @@ void lya_bg_source_emission(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpectr
 		lya_add_modes(thisLya_grid, thisLya_mode);
 	}
 	
+    struct stat st;
+    if (stat("output", &st) == -1) 
+    {
+        printf("creating directory\n");
+        mkdir("output", 0755);
+    }
 #ifdef __MPI
-    write_grid_to_file_float(thisLya_grid->lya, nbins, local_n0, local_0_start, "Lya_grid.dat");
+    write_grid_to_file_float(thisLya_grid->lya, nbins, local_n0, local_0_start, "output/Lya_grid.dat");
 #else
-    write_grid_to_file_float(thisLya_grid->lya, nbins, local_n0, "Lya_grid.dat");
+    write_grid_to_file_float(thisLya_grid->lya, nbins, local_n0, "output/Lya_grid.dat");
 #endif
 	
 	fftw_free(thisLya_mode);

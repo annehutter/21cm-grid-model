@@ -88,6 +88,7 @@ double compute_Ts_inv(double Hubble_z_inv, double nH, double XHI, double couplin
 		Ts_inv = calc_Ts_inv(xa_mod, xc, Teff_inv, Tk_inv, Tbg_inv);
 // 		printf("%d: \txa_mod = %e\t Teff = %e\t xc = %e\t Ts = %e\t Tk = %e\n", i, xa_mod, 1./Teff_inv, xc,  1./Ts_inv, 1./Tk_inv);
 	}
+// 	printf("xa_mod = %e\n", xa_mod);
 	
 	return Ts_inv;
 }
