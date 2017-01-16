@@ -490,3 +490,30 @@ void read_lum_lyagrid(lya_grid_t *thisLya_grid, char *filename, int double_preci
 #endif
 	}
 }
+
+double get_mean_lya_lyagrid(lya_grid_t *thisLya_grid)
+{
+    int nbins = thisLya_grid->nbins;
+	int local_n0 = thisLya_grid->local_n0;
+    double result;
+	    
+    double sum = 0.;
+	for(int i=0; i<local_n0; i++)
+	{
+		for(int j=0; j<nbins; j++)
+		{
+			for(int k=0; k<nbins; k++)
+			{
+				sum += thisLya_grid->lya[i*nbins*nbins+j*nbins+k];
+			}
+		}
+	}
+#ifdef __MPI
+	MPI_Allreduce(&sum, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+    result = sum;
+#endif
+	result /= (nbins*nbins*nbins);
+	
+	return result;
+}

@@ -160,6 +160,7 @@ double *create_redshift_table(inputlist_t *thisInputlist, double zstart, double 
             {
                 num--;
                 z = z - dz;
+                realloc(redshift, num*sizeof(double));
             }
             
             snap++;
@@ -174,6 +175,8 @@ double *create_redshift_table(inputlist_t *thisInputlist, double zstart, double 
     {
         printf("redshift[%d] = %e\n", i, redshift[i]);
     }
+    
+    thisInputlist->num_total = num;
     
     return redshift;
 }
@@ -306,7 +309,7 @@ void evolve(confObj_t simParam)
     redshift = create_redshift_table(thisInputlist, zstart, zend, dz);
     
     int wasHere = 0;
-	for(int i=0; i<thisInputlist->num + (zstart-zend)/dz; i++)
+	for(int i=0; i<thisInputlist->num_total; i++)
 	{
         double z = redshift[i];
         

@@ -66,11 +66,11 @@ k10_t *create_k10_table()
 	thisTable->k10_HH[17] = 1.75e-10;
 	thisTable->k10_HH[18] = 2.09e-10;
 	
-// 	for(int i=0; i<19; i++)
-// 	{
-// 		thisTable->T_HH[i] = log10(thisTable->T_HH[i]);
-// 		thisTable->k10_HH[i] = log10(thisTable->k10_HH[i]);
-// 	}
+	for(int i=0; i<19; i++)
+	{
+		thisTable->T_HH[i] = log10(thisTable->T_HH[i]);
+		thisTable->k10_HH[i] = log10(thisTable->k10_HH[i]);
+	}
 	
 	thisTable->num = 17;
 	thisTable->T = malloc(thisTable->num*sizeof(double));
@@ -131,12 +131,12 @@ k10_t *create_k10_table()
 	thisTable->k10_pH[15] = 1.975e-9;
 	thisTable->k10_pH[16] = 2.201e-9;
 	
-// 	for(int i=0; i<17; i++)
-// 	{
-// 		thisTable->T[i] = log10(thisTable->T[i]);
-// 		thisTable->k10_eH[i] = log10(thisTable->k10_eH[i]);
-// 		thisTable->k10_pH[i] = log10(thisTable->k10_pH[i]);
-// 	}
+	for(int i=0; i<17; i++)
+	{
+		thisTable->T[i] = log10(thisTable->T[i]);
+		thisTable->k10_eH[i] = log10(thisTable->k10_eH[i]);
+		thisTable->k10_pH[i] = log10(thisTable->k10_pH[i]);
+	}
 	
 	return thisTable;
 }
@@ -154,42 +154,56 @@ void deallocate_k10_table(k10_t *thisTable)
 double get_k10_HH(k10_t *thisTable, double temp)	//temperature in log10
 {
 	int i = 0;
+    
+    temp = log10(temp);
 	while(temp > thisTable->T_HH[i] && i<18)
 	{
 		i++;
 	}
 	
+// 	printf("HH: i=%d for %e\n", i, temp);
+	
 	if(i >= 19){
-	      return 0.44*temp - 10.76;
+	      return pow(10., 0.44*temp - 10.76);
 	}else{
-	      return thisTable->k10_HH[i-1] + (temp - thisTable->T_HH[i-1])*(thisTable->k10_HH[i] - thisTable->k10_HH[i-1])/(thisTable->T_HH[i] - thisTable->T_HH[i-1]);
+	      return pow(10., thisTable->k10_HH[i-1] + (temp - thisTable->T_HH[i-1])*(thisTable->k10_HH[i] - thisTable->k10_HH[i-1])/(thisTable->T_HH[i] - thisTable->T_HH[i-1]));
 	}
 }
 
 double get_k10_eH(k10_t *thisTable, double temp)
 {
 	int i = 0;
+    
+    temp = log10(temp);
 	while(temp > thisTable->T[i] && i<16)
 	{
 		i++;
 	}
+	
+//     printf("eH: i=%d for %e\n", i, temp);
+
 	if(i >= 17){
-		return thisTable->k10_eH[16];
+		return pow(10., thisTable->k10_eH[16]);
 	}else{
-		return thisTable->k10_eH[i-1] + (temp - thisTable->T[i-1])*(thisTable->k10_eH[i] - thisTable->k10_eH[i-1])/(thisTable->T[i] - thisTable->T[i-1]);
+		return pow(10., thisTable->k10_eH[i-1] + (temp - thisTable->T[i-1])*(thisTable->k10_eH[i] - thisTable->k10_eH[i-1])/(thisTable->T[i] - thisTable->T[i-1]));
 	}
 }
 
 double get_k10_pH(k10_t *thisTable, double temp)	//temperature in log10
 {
 	int i = 0;
+    
+    temp = log10(temp);
 	while(temp > thisTable->T[i] && i<16)
 	{
 		i++;
 	}
+	
+//     printf("pH: i=%d for %e\n", i, temp);
+
 	if(i >= 17){
-		return 0.38*temp - 8.01;
+		return pow(10., 0.38*temp - 8.01);
 	}else{
-		return thisTable->k10_pH[i-1] + (temp - thisTable->T[i-1])*(thisTable->k10_pH[i] - thisTable->k10_pH[i-1])/(thisTable->T[i] - thisTable->T[i-1]);
+		return pow(10., thisTable->k10_pH[i-1] + (temp - thisTable->T[i-1])*(thisTable->k10_pH[i] - thisTable->k10_pH[i-1])/(thisTable->T[i] - thisTable->T[i-1]));
 	}
 }

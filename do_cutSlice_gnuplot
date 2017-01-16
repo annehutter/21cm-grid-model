@@ -1,0 +1,47 @@
+#! /bin/bash
+if [ $# -lt 8 ]; then
+    echo "Usage: ./do_gnuplot_files <gridsize> <direction> <position> <'name [unit]'> <plot range -value:value or value> <0:x (0:range); 1:x (-range:range); 2:1/x; 3:log10(1-x)> <factor>"
+else
+    files=$1
+    gridsize=$2
+    direction=$3
+    position=$4
+    name=$5
+    range=$6
+    plotstyle=$7
+    factor=$8
+    
+    echo $plotstyle
+    
+    for f in $files*
+    do
+    echo "Processing $f"
+    ~/Promotion/Codes/pCRASH/CRASH_TOOLS/cutSliceToGPLOT/./cutSliceToGPLOT $f $gridsize $position $direction $f"_"$direction"_"$position
+
+    if [ $plotstyle -eq 0 ]; then
+        gnuplot -e "filename='$f"_"$direction"_"$position'; gridsize=$gridsize; clabelname='$name'; mincb=0.; maxcb=$range; outputfilename='$f"_"$direction"_"$position".png"'; column=$factor" plot_slice.gnuplot
+    fi
+    
+    if [ $plotstyle -eq 1 ]; then
+        gnuplot -e "filename='$f"_"$direction"_"$position'; gridsize=$gridsize; clabelname='$name'; mincb=-$range; maxcb=$range; outputfilename='$f"_"$direction"_"$position".png"'; column=$factor" plot_slice_pn.gnuplot
+    fi
+    
+    if [ $plotstyle -eq 2 ]; then
+        gnuplot -e "filename='$f"_"$direction"_"$position'; gridsize=$gridsize; clabelname='$name'; mincb=0.; maxcb=$range; outputfilename='$f"_"$direction"_"$position".png"'; column=$factor" plot_slice_inv.gnuplot
+    fi
+    
+    if [ $plotstyle -eq 3 ]; then
+        gnuplot -e "filename='$f"_"$direction"_"$position'; gridsize=$gridsize; clabelname='$name'; mincb=1.; maxcb=$range; outputfilename='$f"_"$direction"_"$position".png"'; column=$factor" plot_slice_log.gnuplot
+    fi
+    
+    if [ $plotstyle -eq 4 ]; then
+        gnuplot -e "filename='$f"_"$direction"_"$position'; gridsize=$gridsize; clabelname='$name'; mincb=$range; maxcb=-1.; outputfilename='$f"_"$direction"_"$position".png"'; column=$factor" plot_slice_neglog.gnuplot
+    fi
+    
+    rm $f"_"$direction"_"$position
+    
+    DIR=$(dirname "${files}")
+    echo $DIR
+    rm $DIR/*.png_*
+    done
+fi

@@ -5,6 +5,7 @@
 typedef struct
 {
     int num;
+    int num_total;
     
     double *redshift;
     

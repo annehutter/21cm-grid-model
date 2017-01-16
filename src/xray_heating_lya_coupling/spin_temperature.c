@@ -39,7 +39,9 @@ double coupling_coll(double z, double nH, k10_t* k10_table, double Tk)
 {
 	double Tbg = T_CMB(z);
 	
-	return (get_k10_HH(k10_table, Tk) + get_k10_eH(k10_table, Tk) + get_k10_pH(k10_table, Tk))*nH*T21cm/(A10*Tbg);
+	double result = (get_k10_HH(k10_table, Tk) + get_k10_eH(k10_table, Tk) + get_k10_pH(k10_table, Tk))*nH*T21cm/(A10*Tbg);
+    
+    return result;
 }
 
 double coupling_alpha(double prefac_z, double modSalpha, double Jalpha)
@@ -114,7 +116,19 @@ void compute_Ts_on_grid(lya_grid_t *thisLya_grid, k10_t *k10_table, grid_21cm_t 
 	
 	nbins = this21cmGrid->nbins;
 	local_n0 = this21cmGrid->nbins;
-	
+    
+    printf("xa_prefac = %e\t %e\n", xalpha_prefac_z, coupling_alpha_prefac);
+    Jalpha = get_mean_lya_lyagrid(thisLya_grid);
+    printf("xa = %e\n", xalpha_prefac_z*Jalpha);
+    Tk = get_mean_temp_21cmgrid(this21cmGrid);
+    xc = coupling_coll(z, thisCosmology->nH_z, k10_table, Tk);
+	printf("xc = %e\n", xc);
+    printf("Tk = %e\n", Tk);
+    Ts_inv = compute_Ts_inv(Hubble_z_inv, thisCosmology->nH_z, 1., xalpha_prefac_z, Jalpha, xc, 1./Tk, 1./T_CMB(z));
+    printf("Ts = %e\n", 1./Ts_inv);
+    printf("Teff = %e\n", 1./calc_Teff_inv(1./Tk, Ts_inv));
+    printf("xc = %e\t%e\t%e\t%e\t%e\t%e\t%e\n", get_k10_HH(k10_table, Tk),  get_k10_eH(k10_table, Tk), get_k10_pH(k10_table, Tk), thisCosmology->nH_z, T21cm, A10, T_CMB(z));
+    
 	for(int i=0; i<local_n0; i++)
 	{
 		for(int j=0; j<nbins; j++)
@@ -131,7 +145,7 @@ void compute_Ts_on_grid(lya_grid_t *thisLya_grid, k10_t *k10_table, grid_21cm_t 
 				Ts_inv = compute_Ts_inv(Hubble_z_inv, nH, XHI, xalpha_prefac_z, Jalpha, xc, Tk_inv, Tbg_inv);
 				this21cmGrid->Ts_inv[i*nbins*nbins+j*nbins+k] = Ts_inv + 0.*I;
 // 				printf("dens = %e\t nH = %e\t XHI = %e\t Jalpha = %e\t xc = %e\t Tk = %e\n", dens, nH, XHI, Jalpha, xc, Tk);
-// 				printf("Ts = %e\n", 1./Ts_inv);
+				if(i<70 && i>60 && j==64 && k==64) printf("Ts = %e\n", 1./Ts_inv);
 			}
 		}
 	}
