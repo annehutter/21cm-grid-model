@@ -13,6 +13,7 @@
 #include <fftw3.h>
 #endif
 
+#include "utils.h"
 #include "outputs.h"
 
 outputlist_t *read_outputlist(char *filename)

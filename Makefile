@@ -26,7 +26,9 @@ SOURCES := 	./src/main.c \
 		./src/xray_heating_lya_coupling/redshift_tools.c \
 		./src/xray_heating_lya_coupling/spin_temperature.c \
 		./src/xray_heating_lya_coupling/wouthuysen_effect.c \
-		./src/xray_heating_lya_coupling/xray_heating.c 
+		./src/xray_heating_lya_coupling/xray_heating.c \
+		./src/xray_heating_lya_coupling/3cm_grid.c \
+		./src/xray_heating_lya_coupling/spin_temperature_He.c
 OBJECTS := $(SOURCES:.c=.o)
 DOBJECTS := $(SOURCES:.c=.d)
 EXECUTABLE := 21CMGRID

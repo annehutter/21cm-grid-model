@@ -357,7 +357,7 @@ void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter
 		const double tmp = z_distance_to_redshift(z, x, h, omega_m);
 		xray_params->z = tmp - 1.;	//redshift of emitter frame
 		
-		double const vol_emission = CUB((thisXray_grid->box_size/h)/nbins);
+// 		double const vol_emission = CUB((thisXray_grid->box_size/h)/nbins);
 
 //         printf("SQR(1.+z)/(4.*M_PI*SQR(x + eps)) = %e\n", SQR(1.+z)/(4.*M_PI*SQR(x + eps)));
 //         printf("xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4) = %e\n", xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4));

@@ -4,3 +4,6 @@
 ./do_cutSlice_gnuplot output/Ts/Ts_z 128 0 64 'T_s [K]' 400. 2 1.
 ./do_cutSlice_gnuplot output/Tb/Tb_z 128 0 64 '{/Symbol d}T_b [mK]' 150. 1 1000.
 ./do_cutSlice_gnuplot output/Xe/Xe_z 128 0 64 'X_e' -8. 4 1.
+
+./do_cutSlice_gnuplot output/Ts_He/Ts_He_z 128 0 64 'T_s [K]' 100. 2 1.
+./do_cutSlice_gnuplot output/Tb_He/Tb_He_z 128 0 64 'Log {/Symbol d}T_b [0.1 nK]' 4. 3 1.e10

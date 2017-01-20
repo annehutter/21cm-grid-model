@@ -24,6 +24,8 @@
 #include "xray_heating_lya_coupling/wouthuysen_effect.h"
 #include "xray_heating_lya_coupling/21cm_grid.h"
 #include "xray_heating_lya_coupling/spin_temperature.h"
+#include "xray_heating_lya_coupling/3cm_grid.h"
+#include "xray_heating_lya_coupling/spin_temperature_He.h"
 #include "xray_heating_lya_coupling/compute_grid.h"
 
 #include "ion_and_temp_evolution/cell.h"
@@ -153,7 +155,6 @@ double *create_redshift_table(inputlist_t *thisInputlist, double zstart, double 
     {
         if(thisInputlist->redshift[snap] >= z)
         {
-            printf("adding from list item %d\n", snap);
             redshift[i] = thisInputlist->redshift[snap];
             
             if(redshift[i] == z)
@@ -165,16 +166,17 @@ double *create_redshift_table(inputlist_t *thisInputlist, double zstart, double 
             
             snap++;
         }else{
-            printf("normal %e\n",z);
             redshift[i] = z;
             z = z -dz;
         }
     }
     
+    printf("++++\nList of redshift steps:\n");
     for(int i=0; i<num; i++)
     {
-        printf("redshift[%d] = %e\n", i, redshift[i]);
+        printf(" redshift[%d] = %e\n", i, redshift[i]);
     }
+    printf("++++\n\n");
     
     thisInputlist->num_total = num;
     
@@ -207,7 +209,6 @@ void evolve(confObj_t simParam)
 /* GRID */
 /*-------------------------------------------------------------------------------------*/
 	int nbins = simParam->grid_size;
-	int local_n0 = nbins;
 	double box_size = simParam->box_size;
 	
     inputlist_t *thisInputlist;
@@ -221,7 +222,7 @@ void evolve(confObj_t simParam)
 	double alphaX = thisInputlist->alphaX[snap];//-1.5;
 	double nuX_min = thisInputlist->nuX_min[snap];//0.1e3*ev_to_erg/planck_cgs;
 	double lumX = thisInputlist->lumX[snap];//1.29e22/(1.e3*ev_to_erg)*pow(1.e3*ev_to_erg/planck_cgs,-alphaX)*1.e-5;
-	printf("alphaX = %e\t nuX_min = %e\t lumX = %e\n", alphaX, nuX_min, lumX);
+	printf("X-ray sources:\t alphaX = %e\t\t nuX_min = %e\t\t lumX = %e\n", alphaX, nuX_min, lumX);
     
 /*-------------------------------------------------------------------------------------*/
 /* LYA Spectrum */
@@ -229,7 +230,8 @@ void evolve(confObj_t simParam)
 	double alphaLya = thisInputlist->alphaLya[snap];//-1.5;
 	double nuLya_min = thisInputlist->nuLya_min[snap];//10.3*ev_to_erg/planck_cgs;
 	double lumLya = thisInputlist->lumLya[snap];//3.4e40/(1.e3*ev_to_erg);
-    
+	printf("Lya sources:\t alphaLya = %e\t nuLya_min = %e\t lumLya = %e\n", alphaLya, nuLya_min, lumLya);
+
 /*-------------------------------------------------------------------------------------*/
 /* Initialize for ionization and temperature evolution */
 /*-------------------------------------------------------------------------------------*/
@@ -238,7 +240,7 @@ void evolve(confObj_t simParam)
 	double dz = simParam->dz_max;
   
 	cell_t *cell;
-	cell = initCell_temp(14., 1.);
+	cell = initCell_temp(simParam->igm_temperature_start, 1.);
 	
 	recomb_t * recomb_rates;
 	recomb_rates = calcRecRate();
@@ -258,6 +260,7 @@ void evolve(confObj_t simParam)
 	lya_spectrum_t *thisLya_spectrum;
 	
 	grid_21cm_t *this21cmGrid;
+    grid_3cm_t *this3cmGrid;
 	
 	k10_t *k10_table;
 	
@@ -272,13 +275,15 @@ void evolve(confObj_t simParam)
 	thisLya_spectrum = allocate_lya_spectrum(thisInputlist->lumLya[snap], thisInputlist->alphaLya[snap], thisInputlist->nuLya_min[snap]);
 	
 	this21cmGrid = allocate_21cmgrid(nbins, box_size);
-	
+    if(simParam->solve_3He == 1) this3cmGrid = allocate_3cmgrid(nbins, box_size);
+
     read_update_density_grid(thisInputlist->dens_snap[snap], double_precision, this21cmGrid, simParam);
     read_update_xray_grid(thisInputlist->xray_snap[snap], double_precision, thisXray_grid, simParam);
     read_update_lya_grid(thisInputlist->lya_snap[snap], double_precision, thisLya_grid, simParam);
 
-	set_temperature_21cmgrid(this21cmGrid, 14.);
-	
+	set_temperature_21cmgrid(this21cmGrid, simParam->igm_temperature_start);
+    set_temperature_3cmgrid(this3cmGrid, 1.e4);
+
 	k10_table = create_k10_table();
 	
 /*-------------------------------------------------------------------------------------*/
@@ -308,9 +313,10 @@ void evolve(confObj_t simParam)
     
     redshift = create_redshift_table(thisInputlist, zstart, zend, dz);
     
-    int wasHere = 0;
 	for(int i=0; i<thisInputlist->num_total; i++)
 	{
+        printf("++++\nStep %d\n", i);
+        
         double z = redshift[i];
         
         if(fabs(thisInputlist->redshift[snap]-z)<1.e-10 && snap<thisInputlist->num)
@@ -326,16 +332,19 @@ void evolve(confObj_t simParam)
         
         overwrite_old_values_21cmgrid(this21cmGrid);
 
-        printf("z = %e\t %e\n", z, fmod(z,dz));
+        printf(" z = %e\t %e\n", z, fmod(z,dz));
 		cosmology_update_z(thisCosmology, z);
         
 		if(fmod(z,dz) == 0.)
 		{
 			Xe = get_mean_Xe_21cmgrid(this21cmGrid);
-			printf("Xe = %e\t T = %e\n", Xe, get_mean_temp_21cmgrid(this21cmGrid));
+			printf(" Xe = %e\t T = %e\n", Xe, get_mean_temp_21cmgrid(this21cmGrid));
 			do_step_21cm_emission(thisCosmology, thisXray_grid, thisXray_spectrum, thisLya_grid, thisLya_spectrum, this21cmGrid, k10_table, Xe);
-		}
+            
+            if(simParam->solve_3He == 1) do_step_3cm_emission(thisCosmology, thisXray_spectrum, this21cmGrid, this3cmGrid);
+        }
 		this21cmGrid->z = z-dz_tmp;
+        if(simParam->solve_3He == 1) this3cmGrid->z = z-dz_tmp;
 		compute_temp_ion_grid(this21cmGrid, recomb_rates, thisCosmology, thisXray_grid);
 		
         
@@ -349,12 +358,12 @@ void evolve(confObj_t simParam)
             mkdir("output", 0755);
         }
 		sprintf(redshift_string, "%3.1f", z);
-		for(int i=0; i<128; i++)
+		for(int j=0; j<128; j++)
 		{
-			Tb_filename[i] = '\0';
-			Ts_filename[i] = '\0';
-			Xe_filename[i] = '\0';
-			temp_filename[i] = '\0';
+			Tb_filename[j] = '\0';
+			Ts_filename[j] = '\0';
+			Xe_filename[j] = '\0';
+			temp_filename[j] = '\0';
 		}
 		
         if (stat("output/Tb", &st) == -1) 
@@ -400,6 +409,38 @@ void evolve(confObj_t simParam)
 		strcat(temp_filename, redshift_string);
 		strcat(temp_filename, ".dat");
 		write_temp_field_file(this21cmGrid, temp_filename);
+        
+        if(simParam->solve_3He == 1) 
+        {
+            for(int j=0; j<128; j++)
+            {
+                Tb_filename[j] = '\0';
+                Ts_filename[j] = '\0';
+            }
+            
+            if (stat("output/Tb_He", &st) == -1) 
+            {
+                printf("creating directory\n");
+                mkdir("output/Tb_He", 0755);
+            }
+            strcat(Tb_filename, "output/Tb_He/");
+            strcat(Tb_filename, "Tb_He_z");
+            strcat(Tb_filename, redshift_string);
+            strcat(Tb_filename, ".dat");
+            write_Tb_3cm_field_file(this3cmGrid, Tb_filename);
+            
+            if (stat("output/Ts_He", &st) == -1) 
+            {
+                printf("creating directory\n");
+                mkdir("output/Ts_He", 0755);
+            }
+            strcat(Ts_filename, "output/Ts_He/");
+            strcat(Ts_filename, "Ts_He_z");
+            strcat(Ts_filename, redshift_string);
+            strcat(Ts_filename, ".dat");
+            write_Ts_3cm_field_file(this3cmGrid, Ts_filename);
+        }
+        printf("++++\n\n");
 	}
     free(redshift);
 	  
@@ -421,7 +462,8 @@ void evolve(confObj_t simParam)
 	deallocate_lya_spectrum(thisLya_spectrum);
 	
 	deallocate_21cmgrid(this21cmGrid);
-	
+    if(simParam->solve_3He == 1) deallocate_3cmgrid(this3cmGrid);
+
 	deallocate_k10_table(k10_table);
     
     
@@ -554,7 +596,7 @@ void evolve_old()
 			Xe = get_mean_Xe_21cmgrid(this21cmGrid);
 			printf("Xe = %e\n", Xe);
 			do_step_21cm_emission(thisCosmology, thisXray_grid, thisXray_spectrum, thisLya_grid, thisLya_spectrum, this21cmGrid, k10_table, Xe);
-		}
+        }
 		for(int i=0; i<local_n0; i++)
 		{
 			for(int j=0; j<nbins; j++)
@@ -618,7 +660,7 @@ void evolve_old()
 	deallocate_lya_spectrum(thisLya_spectrum);
 	
 	deallocate_21cmgrid(this21cmGrid);
-	
+
 	deallocate_k10_table(k10_table);
 }
 

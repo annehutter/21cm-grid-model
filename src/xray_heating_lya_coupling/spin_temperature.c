@@ -1,4 +1,4 @@
- #include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <gsl/gsl_math.h>	//included because M_PI is not defined in <math.h>
 #include <assert.h>
@@ -100,7 +100,7 @@ void compute_Ts_on_grid(lya_grid_t *thisLya_grid, k10_t *k10_table, grid_21cm_t 
 	double Hubble_z_inv = 1./thisCosmology->Hubble_z;
 	double z = thisCosmology->z;
 	
-	double coupling_alpha_prefac = (4.*M_PI*T21cm*SQR(e)*falpha)/(27.*epsilon0*A10*me_g*1.e-3*clight_cm);
+	double coupling_alpha_prefac = (4.*M_PI*T21cm*SQR(e)*falpha)/(27.*epsilon0*A10*me_g*1.e-5*clight_cm) * 1.e4;
 	double xalpha_prefac_z = coupling_alpha_prefac_z(z, coupling_alpha_prefac);
 
 	double Tbg_inv = 1./T_CMB(z);
@@ -117,17 +117,16 @@ void compute_Ts_on_grid(lya_grid_t *thisLya_grid, k10_t *k10_table, grid_21cm_t 
 	nbins = this21cmGrid->nbins;
 	local_n0 = this21cmGrid->nbins;
     
-    printf("xa_prefac = %e\t %e\n", xalpha_prefac_z, coupling_alpha_prefac);
     Jalpha = get_mean_lya_lyagrid(thisLya_grid);
-    printf("xa = %e\n", xalpha_prefac_z*Jalpha);
     Tk = get_mean_temp_21cmgrid(this21cmGrid);
     xc = coupling_coll(z, thisCosmology->nH_z, k10_table, Tk);
-	printf("xc = %e\n", xc);
-    printf("Tk = %e\n", Tk);
     Ts_inv = compute_Ts_inv(Hubble_z_inv, thisCosmology->nH_z, 1., xalpha_prefac_z, Jalpha, xc, 1./Tk, 1./T_CMB(z));
-    printf("Ts = %e\n", 1./Ts_inv);
-    printf("Teff = %e\n", 1./calc_Teff_inv(1./Tk, Ts_inv));
-    printf("xc = %e\t%e\t%e\t%e\t%e\t%e\t%e\n", get_k10_HH(k10_table, Tk),  get_k10_eH(k10_table, Tk), get_k10_pH(k10_table, Tk), thisCosmology->nH_z, T21cm, A10, T_CMB(z));
+
+//     printf("xa = %e\n", xalpha_prefac_z*Jalpha);
+//     printf("xc = %e\n", xc);
+//     printf("Teff = %e\n", 1./calc_Teff_inv(1./Tk, Ts_inv));
+//     printf("Tk = %e\n", Tk);
+//     printf("Ts = %e\n", 1./Ts_inv);
     
 	for(int i=0; i<local_n0; i++)
 	{
@@ -145,7 +144,7 @@ void compute_Ts_on_grid(lya_grid_t *thisLya_grid, k10_t *k10_table, grid_21cm_t 
 				Ts_inv = compute_Ts_inv(Hubble_z_inv, nH, XHI, xalpha_prefac_z, Jalpha, xc, Tk_inv, Tbg_inv);
 				this21cmGrid->Ts_inv[i*nbins*nbins+j*nbins+k] = Ts_inv + 0.*I;
 // 				printf("dens = %e\t nH = %e\t XHI = %e\t Jalpha = %e\t xc = %e\t Tk = %e\n", dens, nH, XHI, Jalpha, xc, Tk);
-				if(i<70 && i>60 && j==64 && k==64) printf("Ts = %e\n", 1./Ts_inv);
+// 				if(i<70 && i>60 && j==64 && k==64) printf("Ts = %e\n", 1./Ts_inv);
 			}
 		}
 	}
@@ -156,9 +155,6 @@ void compute_Ts_on_grid(lya_grid_t *thisLya_grid, k10_t *k10_table, grid_21cm_t 
 
 void lya_wouthuysen_coupling(lya_grid_t *thisLya_grid, lya_spectrum_t *thisSpectrum, xray_grid_t *thisXray_grid, grid_21cm_t *this21cmGrid, cosmology_t *thisCosmology)
 {
-    int nbins = thisLya_grid->nbins;
-	int local_n0 = thisLya_grid->local_n0;
-	
 	/* compute comoving Lya flux */
 	lya_bg_source_emission(thisLya_grid, thisSpectrum, thisCosmology);
 	lya_bg_lya_excitation(thisLya_grid, thisXray_grid, this21cmGrid, thisCosmology);

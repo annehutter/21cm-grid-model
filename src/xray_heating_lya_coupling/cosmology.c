@@ -34,6 +34,8 @@ cosmology_t *initCosmology()
 	thisCosmology->Y = 0.;
 	thisCosmology->nH_z = 0.;
 	thisCosmology->nHe_z = 0.;
+    
+    thisCosmology->f3He = 0.;
 	
 	return thisCosmology;
 }
@@ -60,6 +62,8 @@ cosmology_t *allocate_cosmology(double h, double omega_m, double omega_l, double
 	thisCosmology->Y = Y;
 	thisCosmology->nH_z = calc_nH_z(h, omega_b, z, Y);
 	thisCosmology->nHe_z = calc_nHe_z(h, omega_b, z, Y);
+    
+    thisCosmology->f3He = 1.e-5;
 	
 	return thisCosmology;
 }

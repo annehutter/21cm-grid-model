@@ -24,8 +24,9 @@ const double sigma_HI = 3.2e-18;//6.3e-18;	//in cm^2	if spectrally averaged it i
 const double gamma_gas = 5./3.;
 const double rho_g_cm = 1.8791e-29;	// in gramms/cm^3
 
-const double e = 1.609e-16;		//electron charge in C
+const double e = 1.609e-19;		//electron charge in C
 const double A10 = 2.85e-15;		//in s^-1
+const double A10_He = 1.959e-12;
 
 const double epsilon0 = 8.85e-12;
 

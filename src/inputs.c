@@ -13,6 +13,7 @@
 #include <fftw3.h>
 #endif
 
+#include "utils.h"
 #include "inputs.h"
 
 inputlist_t *read_inputlist(char *filename)

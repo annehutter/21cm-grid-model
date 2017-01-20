@@ -34,6 +34,7 @@ confObj_new(parse_ini_t ini)
 	//reading mandatory stuff
 	getFromIni(&(config->input_doubleprecision), parse_ini_get_int32,
 	           ini, "inputFilesAreInDoublePrecision", "General");
+    
 	getFromIni(&(config->input_list), parse_ini_get_string,
 	           ini, "inputList", "General");
 	getFromIni(&(config->igm_density_file), parse_ini_get_string,
@@ -68,6 +69,12 @@ confObj_new(parse_ini_t ini)
 	getFromIni(&(config->Y), parse_ini_get_double,
 		   ini, "Y", "General");
 
+	getFromIni(&(config->solve_3He), parse_ini_get_int32,
+	           ini, "solve_3He", "General");
+    
+	getFromIni(&(config->igm_temperature_start), parse_ini_get_double,
+		   ini, "initialIGMtemperature", "General");
+    
 	return config;
 }
 

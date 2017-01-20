@@ -19,6 +19,8 @@
 #include "../xray_heating_lya_coupling/wouthuysen_effect.h"
 #include "../xray_heating_lya_coupling/21cm_grid.h"
 #include "../xray_heating_lya_coupling/spin_temperature.h"
+#include "../xray_heating_lya_coupling/3cm_grid.h"
+#include "../xray_heating_lya_coupling/spin_temperature_He.h"
 #include "../xray_heating_lya_coupling/compute_grid.h"
 
 #include "recomb_rates.h"

@@ -42,6 +42,10 @@ struct confObj_struct {
 	double 			omega_l;
 	double			sigma8;
 	double			Y;
+    
+    int             solve_3He;
+    
+    double          igm_temperature_start;
 };
 
 

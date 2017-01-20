@@ -15,6 +15,8 @@ typedef struct
 	double Y;
 	double nH_z;
 	double nHe_z;
+    
+    double f3He;
 } cosmology_t;
 
 
