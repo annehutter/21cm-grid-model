@@ -155,10 +155,11 @@ double xray_heating_function_HI(double nu, void *p)
 	params->nu = nu;	//nu is in reference frame of zp (at absorption site)
 	double factor = (1.+params->z)/(1.+params->zp);
 	double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
-	
+    double emission = params->emission/(planck_cgs*params->nu_min);
+
 	if(mfp <= 1. && nu >= params->nu_min/factor){	// nu_min is in reference frame of emitter, i.e. z
-//         printf("           %e\t%e\t%e\t%e\t%e\t%e\n",nu, params->emission*pow(nu*factor,params->alphaX)*planck_cgs*(nu-nu_HI)*cross_sec_HI(nu),  params->emission, pow(nu*factor,params->alphaX), planck_cgs*(nu-nu_HI),cross_sec_HI(nu));
-		return params->emission*pow(nu*factor,params->alphaX)*planck_cgs*(nu-nu_HI)*cross_sec_HI(nu);
+//         printf("           %e\t%e\t%e\t%e\t%e\t%e\n",nu, emission*pow(nu/params->nu_min*factor,params->alphaX)*planck_cgs*(nu-nu_HI)*cross_sec_HI(nu),  params->emission, pow(nu*factor,params->alphaX), planck_cgs*(nu-nu_HI),cross_sec_HI(nu));
+		return emission*pow(nu/params->nu_min*factor,params->alphaX)*planck_cgs*(nu-nu_HI)*cross_sec_HI(nu);
 	}else{
 		return 0.;
 	}
@@ -171,9 +172,10 @@ double xray_heating_function_HeI(double nu, void *p)
 	params->nu = nu;	//nu is in reference frame of zp (at absorption site)
 	double factor = (1.+params->z)/(1.+params->zp);
 	double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
-	
+    double emission = params->emission/(planck_cgs*params->nu_min);
+
 	if(mfp <= 1. && nu >= params->nu_min/factor){	// nu_min is in reference frame of emitter, i.e. z
-		return params->emission*pow(nu*factor,params->alphaX)*planck_cgs*(nu-nu_HeI)*cross_sec_HeI(nu);
+		return emission*pow(nu/params->nu_min*factor,params->alphaX)*planck_cgs*(nu-nu_HeI)*cross_sec_HeI(nu);
 	}else{
 		return 0.;
 	}
@@ -186,9 +188,10 @@ double xray_heating_function_HeII(double nu, void *p)
 	params->nu = nu;	//nu is in reference frame of zp (at absorption site)
 	double factor = (1.+params->z)/(1.+params->zp);
 	double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
-	
+    double emission = params->emission/(planck_cgs*params->nu_min);
+
 	if(mfp <= 1. && nu >= params->nu_min/factor){	// nu_min is in reference frame of emitter, i.e. z
-		return params->emission*pow(nu*factor,params->alphaX)*planck_cgs*(nu-nu_HeII)*cross_sec_HeII(nu);
+		return emission*pow(nu/params->nu_min*factor,params->alphaX)*planck_cgs*(nu-nu_HeII)*cross_sec_HeII(nu);
 	}else{
 		return 0.;
 	}
@@ -250,9 +253,10 @@ double xray_ionization_function_HI(double nu, void *p)
 	params->nu = nu;	//nu is in reference frame of zp (at absorption site)
 	double factor = (1.+params->z)/(1.+params->zp);
 	double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
+    double emission = params->emission/(planck_cgs*params->nu_min);
 	
 	if(mfp <= 1. && nu >= params->nu_min/factor){	// nu_min is in reference frame of emitter, i.e. z
-		return params->emission*pow(nu*factor,params->alphaX)*cross_sec_HI(nu);
+		return emission*pow(nu/params->nu_min*factor,params->alphaX)*cross_sec_HI(nu);
 	}else{
 		return 0.;
 	}
@@ -265,9 +269,10 @@ double xray_ionization_function_HeI(double nu, void *p)
 	params->nu = nu;	//nu is in reference frame of zp (at absorption site)
 	double factor = (1.+params->z)/(1.+params->zp);
 	double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
-	
+    double emission = params->emission/(planck_cgs*params->nu_min);
+
 	if(mfp <= 1. && nu >= params->nu_min/factor){	// nu_min is in reference frame of emitter, i.e. z
-		return params->emission*pow(nu*factor,params->alphaX)*cross_sec_HeI(nu);
+		return emission*pow(nu/params->nu_min*factor,params->alphaX)*cross_sec_HeI(nu);
 	}else{
 		return 0.;
 	}
@@ -280,9 +285,10 @@ double xray_ionization_function_HeII(double nu, void *p)
 	params->nu = nu;	//nu is in reference frame of zp (at absorption site)
 	double factor = (1.+params->z)/(1.+params->zp);
 	double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
-	
+    double emission = params->emission/(planck_cgs*params->nu_min);
+
 	if(mfp <= 1. && nu >= params->nu_min/factor){	// nu_min is in reference frame of emitter, i.e. z
-		return params->emission*pow(nu*factor,params->alphaX)*cross_sec_HeII(nu);
+		return emission*pow(nu/params->nu_min*factor,params->alphaX)*cross_sec_HeII(nu);
 	}else{
 		return 0.;
 	}

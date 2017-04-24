@@ -65,7 +65,7 @@ double update_temp(grid_21cm_t *this21cmGrid, int index, double sqrt_cub_z, doub
 	
 // 	printf("temp_old = %e\t temp = %e\t heating = %e\t %e\t%e\n", temp_old, temp_old*SQR(1.+dens)*(1.+Xe)/(SQR(1.+dens_old)*(1.+Xe_old)) + 4.*xray_heating/(21.*boltzman_cgs*Hubble)*(sqrt_cub_z-sqrt_cub_z_old*factor), xray_heating, temp_old*SQR(1.+dens)*(1.+Xe)/(SQR(1.+dens_old)*(1.+Xe_old)), 4.*xray_heating/(21.*boltzman_cgs*Hubble)*(sqrt_cub_z-sqrt_cub_z_old*factor));
 	
-	return temp_old*SQR(1.+dens)*(1.+Xe)/(SQR(1.+dens_old)*(1.+Xe_old)) + 4.*xray_heating/(21.*boltzman_cgs*Hubble)*(sqrt_cub_z-sqrt_cub_z_old*factor);
+	return temp_old*factor*SQR(1.+dens)*(1.+Xe)/(SQR(1.+dens_old)*(1.+Xe_old)) + 4.*xray_heating/(21.*boltzman_cgs*Hubble)*(sqrt_cub_z-sqrt_cub_z_old*factor);
 }
 
 double update_dens(grid_21cm_t *this21cmGrid, int index, double D)

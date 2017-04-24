@@ -52,7 +52,8 @@ double lya_spectrum(lya_spectrum_t *thisSpectrum, double nu)
 {
 	if(nu>thisSpectrum->nu_min)
 	{
-		return thisSpectrum->lum*pow(nu, thisSpectrum->alpha);
+//         printf("nu = %e\t %e\n", nu, thisSpectrum->lum/(planck_cgs*thisSpectrum->nu_min)*pow(nu/thisSpectrum->nu_min, thisSpectrum->alpha));
+		return thisSpectrum->lum/(planck_cgs*thisSpectrum->nu_min)*pow(nu/thisSpectrum->nu_min, thisSpectrum->alpha);
 	}else{
 		return 0.;
 	}

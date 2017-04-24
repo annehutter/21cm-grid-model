@@ -175,7 +175,7 @@ void lya_bg_lya_excitation(lya_grid_t *thisLya_grid, xray_grid_t *thisXray_grid,
 			{
                 double const Xe = this21cmGrid->Xe[i*nbins*nbins+j*nbins+k];
                 
-				double const heating = creal(thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeII[i*nbins*nbins+j*nbins+k]);
+				double const heating = (creal(thisXray_grid->xray_heating_HI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeI[i*nbins*nbins+j*nbins+k]) + creal(thisXray_grid->xray_heating_HeII[i*nbins*nbins+j*nbins+k]))*(1.-Xe);
 				
 				if(heating<0.) 
 				{
