@@ -14,7 +14,7 @@
 #include "recomb_rates.h"
 
 double recHII(double temp){
-	return 6.28e-11/sqrt(temp)*pow(temp/1e3,-0.2)/(1.+pow(temp/1.e6,0.7));	//case A
+	return 6.28e-11/sqrt(temp)*pow(temp/1.e3,-0.2)/(1.+pow(temp/1.e6,0.7));	//case A
 // 	return 2.6e-13*pow(temp/1.e4,-0.85);	//case B
 }
 
@@ -23,7 +23,7 @@ double recHeII(double temp){
 }
 
 double recHeIII(double temp){
-	return 3.36e-10/sqrt(temp)*pow(temp/1e3,-0.2)/(1.+pow(temp/4e6,0.7));
+	return 3.36e-10/sqrt(temp)*pow(temp/1.e3,-0.2)/(1.+pow(temp/4.e6,0.7));
 }
 
 recomb_t *calcRecRate(){
@@ -68,12 +68,14 @@ recomb_t *calcRecRate(){
 		thisRecombRates->recHII[i] = recHII(temp);
 		thisRecombRates->recHeII[i] = recHeII(temp);
 		thisRecombRates->recHeIII[i] = recHeIII(temp);
+//         printf("%d: \t%e\t%e\n", i, temp, thisRecombRates->recHII[i]);
 	}
 	for(int i=1; i<=upper_steps; i++){
 		temp = saturation + (temp_max - saturation)/upper_steps*i;
 		thisRecombRates->recHII[i + lower_steps] = recHII(temp);
 		thisRecombRates->recHeII[i + lower_steps] = recHeII(temp);
 		thisRecombRates->recHeIII[i + lower_steps] = recHeIII(temp);
+//         printf("%d: \t%e\t%e\n", i+lower_steps, temp, thisRecombRates->recHII[i + lower_steps]);
 	}
 	
 	return thisRecombRates;

@@ -33,17 +33,38 @@ OBJECTS := $(SOURCES:.c=.o)
 DOBJECTS := $(SOURCES:.c=.d)
 EXECUTABLE := 21CMGRID
 
+# ---------------------------------
+# Available debug flags
+# ---------------------------------
+# DEBUGFLAG_REDSHIFTLIST
+# DEBUGFLAG_21CM_TB_CALCULATION
+# DEBUGFLAG_3CM_TB_CALCULATION
+# DEBUGFLAG_TS_CALCULATION
+# DEBUGFLAG_TS_HE_CALCULATION
+# DEBUGFLAG_XRAY_FILTER
+# DEBUG_WRITE_XRAY_GRIDS_TO_FILE
+# DEBUG_XRAY_HEATING 
+# DEBUGFLAG_LYA_FILTER
+# DEBUGFLAG_LYA_SPECTRUM
+# ---------------------------------
+
+DEBUG = 
+
+# ---------------------------------
+
 OPTIMIZE = -O3 -ftree-vectorize
 WARNING = -Wall -Wextra -Wshadow -g
 
+USE-MPI = yes
+
 ifdef USE-MPI
 	CC := mpicc
-	CFLAGS := -c -std=c99 -march=native -lm $(WARNING) $(OPTIMIZE) -D __MPI
+	CFLAGS := -c -std=c99 -march=native -lm $(WARNING) $(OPTIMIZE) -D __MPI $(DEBUG)
 	LDFLAGS := -lfftw3_mpi -lfftw3 -lm -lmpich -lgsl -lgslcblas
 
 else
 	CC := gcc
-	CFLAGS := -c -std=c99 -march=native -lm $(WARNING) $(OPTIMIZE) 
+	CFLAGS := -c -std=c99 -march=native -lm $(WARNING) $(OPTIMIZE) $(DEBUG)
 	LDFLAGS := -lfftw3 -lm -lgsl -lgslcblas
 endif
 

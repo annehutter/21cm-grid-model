@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <gsl/gsl_math.h>	//included because M_PI is not defined in <math.h>
+#include <gsl/gsl_math.h>    //included because M_PI is not defined in <math.h>
 #include <assert.h>
 #include <complex.h>
 
@@ -10,6 +10,8 @@
 #else
 #include <fftw3.h>
 #endif
+
+#include "../settings.h"
 
 #include "phys_const.h"
 #include "chem_const.h"
@@ -43,42 +45,39 @@ double calc_Tk_He(xray_spectrum_t *thisXraySpectrum)
 
 void compute_Ts_He_on_grid(xray_spectrum_t *thisXraySpectrum, grid_3cm_t *this3cmGrid, grid_21cm_t *this21cmGrid, cosmology_t *thisCosmology)
 {
-// 	double Hubble_z_inv = 1./thisCosmology->Hubble_z;
-	double z = thisCosmology->z;
-	
-	double Tbg_inv = 1./T_CMB(z);
-	double Tk, Tk_inv;
+    double z = thisCosmology->z;
+    
+    double Tbg_inv = 1./T_CMB(z);
+    double Tk, Tk_inv;
     double Ta_inv;
     double Ts_inv;
-	
-	double dens, nH, nHe, Xe, ne;
-	double xa, xc;
-	
-	int nbins;
-	int local_n0;
-	
-	nbins = this21cmGrid->nbins;
-	local_n0 = this21cmGrid->nbins;
+    
+    double dens, nH, nHe, Xe, ne;
+    double xa, xc;
+    
+    int nbins;
+    int local_n0;
+    
+    nbins = this21cmGrid->nbins;
+    local_n0 = this21cmGrid->local_n0;
 
     xa = 0.;
     Tk = calc_Tk_He(thisXraySpectrum);
     Tk_inv = 1./Tk;
     Ta_inv = Tk_inv;   
     
-//     printf("nHe = %e\t nH = %e\n",  calc_nHe_z(thisCosmology->h, thisCosmology->omega_b, 25., thisCosmology->Y), calc_nH_z(thisCosmology->h, thisCosmology->omega_b, 25., thisCosmology->Y));
-//     printf("xc = %e\n", coupling_coll_He(25., calc_nHe_z(thisCosmology->h, thisCosmology->omega_b, 25., thisCosmology->Y)+calc_nH_z(thisCosmology->h, thisCosmology->omega_b, 25., thisCosmology->Y), 1.e4));
-//     printf("xc = %e\n", coupling_coll_He(25., 2.5e-7*25.*25.*25., 1.e4));
+    debug_printf(DEBUG_TS_HE_CALCULATION, "+DEBUG+ nHe = %e cm^-3\t nH = %e cm^-3\t xc = %e\n",  calc_nHe_z(thisCosmology->h, thisCosmology->omega_b, z, thisCosmology->Y), calc_nH_z(thisCosmology->h, thisCosmology->omega_b, z, thisCosmology->Y), coupling_coll_He(z, calc_nHe_z(thisCosmology->h, thisCosmology->omega_b, z, thisCosmology->Y)+calc_nH_z(thisCosmology->h, thisCosmology->omega_b, z, thisCosmology->Y), 1.e4));
     
     for(int i=0; i<local_n0; i++)
-	{
-		for(int j=0; j<nbins; j++)
-		{
-			for(int k=0; k<nbins; k++)
-			{
+    {
+        for(int j=0; j<nbins; j++)
+        {
+            for(int k=0; k<nbins; k++)
+            {
                 dens = creal(this21cmGrid->dens[i*nbins*nbins+j*nbins+k]);
                 nHe = thisCosmology->nHe_z*dens;
                 nH = thisCosmology->nH_z*dens;
-                Xe = 1.;//creal(this21cmGrid->Xe[i*nbins*nbins+j*nbins+k]);
+                Xe = creal(this21cmGrid->Xe[i*nbins*nbins+j*nbins+k]);
                 ne = (nHe+nH)*Xe;
                 xc = coupling_coll_He(z, ne, Tk);
                 Ts_inv = calc_Ts_inv(xa, xc, Ta_inv, Tk_inv, Tbg_inv);

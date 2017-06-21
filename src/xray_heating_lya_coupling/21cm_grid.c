@@ -228,7 +228,7 @@ double get_mean_Xe_21cmgrid(grid_21cm_t *this21cmGrid)
 					printf("Xe is nan!\n");
 					sum += 1.;
 				}else{
-					sum += this21cmGrid->Xe[i*nbins*nbins+j*nbins+k];
+					sum += creal(this21cmGrid->Xe[i*nbins*nbins+j*nbins+k]);
 				}
 			}
 		}
@@ -256,7 +256,7 @@ double get_mean_temp_21cmgrid(grid_21cm_t *this21cmGrid)
 		{
 			for(int k=0; k<nbins; k++)
 			{
-				sum += this21cmGrid->temp[i*nbins*nbins+j*nbins+k];
+				sum += creal(this21cmGrid->temp[i*nbins*nbins+j*nbins+k]);
 			}
 		}
 	}

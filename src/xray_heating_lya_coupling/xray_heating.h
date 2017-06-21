@@ -85,9 +85,9 @@ double xray_ionization_HeII_calc_integral(xray_params_t params, double lowLim, d
 void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter_heating, double *xray_filter_ionization, xray_params_t *xray_params, int type);
 void xray_filter(xray_grid_t *thisXray_grid, double *xray_filter_function, fftw_complex *filter);
 
-void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCosmology, double Xe, xray_spectrum_t *thisSpectrum);
+void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCosmology, double Xe, xray_spectrum_t *thisSpectrum, int myRank);
 
-void xray_heating_and_ionization_global(xray_grid_t *thisXray_grid, cosmology_t *thisCosmology, double Xe, xray_spectrum_t *thisSpectrum);
+void xray_heating_and_ionization_global(xray_grid_t *thisXray_grid, cosmology_t *thisCosmology, double Xe, xray_spectrum_t *thisSpectrum, int myRank);
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -114,5 +114,6 @@ xray_spectrum_t *allocate_xray_spectrum(double lumX, double alphaX, double nu_mi
 xray_grid_t *initXray_grid();
 void deallocate_xray_grid(xray_grid_t * thisXray_grid);
 xray_grid_t *allocate_xray_grid(int nbins, float box_size);
+void initialize_xray_grid(fftw_complex *thisArray, int nbins, int local_n0, double value);
 
 void read_lum_xraygrid(xray_grid_t *thisXray_grid, char *filename, int double_precision);

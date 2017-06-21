@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <gsl/gsl_math.h>	//included because M_PI is not defined in <math.h>
+#include <gsl/gsl_math.h>    //included because M_PI is not defined in <math.h>
 #include <assert.h>
 #include <complex.h>
 #include <time.h>
@@ -36,61 +36,60 @@
 #include "confObj.h"
 #include "evolution.h"
 
-
 int main (int argc, /*const*/ char * argv[]) { 
 #ifdef __MPI
-	int size = 1;
+    int size = 1;
 #endif
-	int myRank = 0;
-	
+    int myRank = 0;
+    
     char iniFile[1000];
     confObj_t simParam;
         
-	double t1, t2;
+    double t1, t2;
 
 #ifdef __MPI
-	MPI_Init(&argc, &argv); 
-	MPI_Comm_size(MPI_COMM_WORLD, &size); 
-	MPI_Comm_rank(MPI_COMM_WORLD, &myRank); 
-	
-	t1 = MPI_Wtime();
-	
-	fftw_mpi_init();
+    MPI_Init(&argc, &argv); 
+    MPI_Comm_size(MPI_COMM_WORLD, &size); 
+    MPI_Comm_rank(MPI_COMM_WORLD, &myRank); 
+    
+    t1 = MPI_Wtime();
+    
+    fftw_mpi_init();
 #else
-	t1 = time(NULL);
+    t1 = time(NULL);
 #endif
     
-	//parse command line arguments and be nice to user
-	if (argc != 2) {
-		printf("cifog: (C)  - Use at own risk...\n");
-		printf("USAGE:\n");
-		printf("cifog iniFile\n");
-		
-		exit(EXIT_FAILURE);
-	} else {
-		strcpy(iniFile, argv[1]);
-	}
-	
+    //parse command line arguments and be nice to user
+    if (argc != 2) {
+        printf("cifog: (C)  - Use at own risk...\n");
+        printf("USAGE:\n");
+        printf("cifog iniFile\n");
+        
+        exit(EXIT_FAILURE);
+    } else {
+        strcpy(iniFile, argv[1]);
+    }
+        
     //read paramter file
-	simParam = readConfObj(iniFile);
-	
-    evolve(simParam);
+    simParam = readConfObj(iniFile);
+    
+    evolve(simParam, myRank);
 
     confObj_del(&simParam);
-	
-	if(myRank==0) printf("Finished\n");
+    
+    if(myRank==0) printf("Finished\n");
 #ifdef __MPI
-	fftw_mpi_cleanup();
-	
-	t2 = MPI_Wtime();
-	printf("Execution took %f s\n", t2-t1);
-	MPI_Finalize();
+    fftw_mpi_cleanup();
+    
+    t2 = MPI_Wtime();
+    if(myRank == 0) printf("Execution took %f s\n", t2-t1);
+    MPI_Finalize();
 #else
-	fftw_cleanup();
-	
-	t2 = time(NULL);
-	printf("Execution took %f s\n", t2-t1);
+    fftw_cleanup();
+    
+    t2 = time(NULL);
+    printf("Execution took %f s\n", t2-t1);
 #endif
-	
-	return 0;
+    
+    return 0;
 }

@@ -46,6 +46,6 @@ set cblabel clabelname
 
 set colorbox horizontal back user origin 0.065, 0.15 size 0.86, 0.05
 
-splot filename u 1:2:(log10($3*column))
+splot filename u 1:2:(log10(1.-$3*column))
 
 unset multiplot
