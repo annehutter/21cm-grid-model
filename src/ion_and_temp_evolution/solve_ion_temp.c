@@ -32,7 +32,8 @@
 
 void update_ion_temp(recomb_t *thisRecombRates, double dens_old, double dens, double *Xe_old, double *Xe, double *temp_old, double *temp, double z_old, double z, double gamma, double n, double xray_heating, double Hubble)
 {
-    double recomb = thisRecombRates->recHII[temp_recomb_index(thisRecombRates, *temp_old)];
+    int temp_index = temp_recomb_index(thisRecombRates, *temp_old);
+    double recomb = thisRecombRates->recHII[temp_index];
     
     *Xe = update_ion_smallXe(n*dens, *Xe_old, recomb, z, z_old, gamma, Hubble);
     *temp = update_temp(dens_old, dens, *Xe_old, *Xe, *temp_old, z, z_old, xray_heating, Hubble);
@@ -48,6 +49,11 @@ void update_ion_temp(recomb_t *thisRecombRates, double dens_old, double dens, do
     {
         *Xe = update_ion_constdens(n*dens*CUB(1.+z_old), *Xe_old, recomb, z, z_old, gamma, Hubble);
         *temp = update_temp(dens_old, dens, *Xe_old, *Xe, *temp_old, z, z_old, xray_heating, Hubble);
+    }
+    
+    if(isnan(*Xe))
+    {
+        printf("NAN alarm! Xe = %e\t Xe_old = %e\t gamma = %e\t n = %e\t dens = %e\t temp = %e\t recomb = %e\t Hubble = %e\n", *Xe, *Xe_old, gamma, n, dens, *temp_old, recomb, Hubble);
     }
     
     Xe_old = Xe;
@@ -84,10 +90,15 @@ double update_ion_constdens(double dens, double Xe_old, double recomb, double z,
     double tmp = gamma/(2.*dens*recomb);
     double tmp2 = sqrt(1.+2./tmp);
     
-    double atanh_argument = Xe_old+tmp/(tmp*tmp2);
+    double atanh_argument = (Xe_old+tmp)/(tmp*tmp2);
     double tanh_argument = gamma*tmp2*(1./z_old_CUB - 1./z_CUB)/(3.*Hubble) - atanh(atanh_argument);
     
     double Xe_new = - tmp * (1. + tmp2 * tanh(tanh_argument));
+    
+    if(isnan(Xe_new))
+    {
+        printf("tmp = %e\t tmp2 = %e\t tanh_argument = %e (%e)\t atanh_argument = %e\n", tmp, tmp2, tanh_argument, gamma*tmp2*(1./z_old_CUB - 1./z_CUB)/(3.*Hubble), atanh_argument);
+    }
     
     return Xe_new;
 }

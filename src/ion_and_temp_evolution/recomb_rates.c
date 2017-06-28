@@ -98,6 +98,7 @@ void extend_recomb(recomb_t *thisRecombRates, double new_temp_max)
 	int upper_steps;
 	int lower_steps = thisRecombRates->lower_steps;
 	int N;
+    double *tmparray;
 	
 	thisRecombRates->upper_steps += (new_temp_max-temp_max_old)/((temp_max_old-saturation)/upper_steps_old);
 	upper_steps = thisRecombRates->upper_steps;
@@ -106,11 +107,18 @@ void extend_recomb(recomb_t *thisRecombRates, double new_temp_max)
 	N = thisRecombRates->lower_steps + thisRecombRates->upper_steps;
 	thisRecombRates->N = N;
 	
-	thisRecombRates->recHII = realloc(thisRecombRates->recHII,(N+1));
-	thisRecombRates->recHeII = realloc(thisRecombRates->recHeII,(N+1));
-	thisRecombRates->recHeIII = realloc(thisRecombRates->recHeIII,(N+1));
-	
-	for(int i=upper_steps; i<=thisRecombRates->upper_steps; i++)
+    tmparray = realloc(thisRecombRates->recHII,sizeof(double)*(N+1));
+    if(tmparray == NULL)
+    {
+        printf("Could not reallocate correctly\n");
+    }
+    thisRecombRates->recHII = tmparray;
+
+	thisRecombRates->recHeII = realloc(thisRecombRates->recHeII,sizeof(double)*(N+1));
+	thisRecombRates->recHeIII = realloc(thisRecombRates->recHeIII,sizeof(double)*(N+1));
+    thisRecombRates->temp_max = new_temp_max;
+        
+	for(int i=upper_steps_old; i<=thisRecombRates->upper_steps; i++)
 	{
 		temp = saturation + (temp_max_old - saturation)/upper_steps_old*i;
 		thisRecombRates->recHII[i + lower_steps] = recHII(temp);

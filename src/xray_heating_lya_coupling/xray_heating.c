@@ -126,7 +126,11 @@ double xray_mean_free_path_function(double zd, void *p)
     double tmp = 3.*clight_cm*(h*100.*km_cm/Mpc_cm)*omega_b/((8.*M_PI*G)*mp_g*sqrt(omega_m*CUB(1.+zd)+omega_l));
     double nu_zd = nu*(1.+zd)/(1.+zp);
     
-    return tmp*SQR(1.+zd)*((1.-Y)*(1.-Xe)*cross_sec_HI(nu_zd) + Y*( (1.-Xe)*cross_sec_HeI(nu_zd) +  Xe*cross_sec_HeII(nu_zd)));
+    double result = tmp*SQR(1.+zd)*((1.-Y)*(1.-Xe)*cross_sec_HI(nu_zd) + Y*( (1.-Xe)*cross_sec_HeI(nu_zd) +  Xe*cross_sec_HeII(nu_zd)));
+    
+//     printf("mfp:\t result = %e\t tmp = %e\t rest = %e\t nu_zd = %e\n", result, tmp, SQR(1.+zd)*((1.-Y)*(1.-Xe)*cross_sec_HI(nu_zd) + Y*( (1.-Xe)*cross_sec_HeI(nu_zd) +  Xe*cross_sec_HeII(nu_zd))), nu_zd);
+    
+    return result;
 }
 
 double xray_mfp_calc_integral(xray_params_t params, double lowLim, double upLim)
@@ -141,6 +145,9 @@ double xray_mfp_calc_integral(xray_params_t params, double lowLim, double upLim)
     gsl_integration_qags(&F, lowLim, upLim, 1.e-9, 1.e-9, 10000, w, &result, &error);
     
     gsl_integration_workspace_free(w);
+    
+//     printf("mfp:\t result = %e\n", result);
+    
     return result;
 }
 
@@ -159,11 +166,13 @@ double xray_heating_function_HI(double nu, void *p)
     
     params->nu = nu;    //nu is in reference frame of zp (at absorption site)
     double factor = (1.+params->z)/(1.+params->zp);
-    double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
+    double mfp = xray_mfp_calc_integral(*params, params->zp, params->z+1.e-10);
     double emission = params->emission/(planck_cgs*params->nu_min);
+    
+//     printf("           nu = %e\t%e\tmfp = %e\tnu_min = %e\t z = %e\t zp = %e\n",nu, emission*pow(nu/params->nu_min*factor,params->alphaX)*planck_cgs*(nu-nu_HI)*cross_sec_HI(nu), mfp, params->nu_min/factor, params->z, params->zp);
 
     if(mfp <= 1. && nu >= params->nu_min/factor){    // nu_min is in reference frame of emitter, i.e. z
-//         printf("           %e\t%e\t%e\t%e\t%e\t%e\n",nu, emission*pow(nu/params->nu_min*factor,params->alphaX)*planck_cgs*(nu-nu_HI)*cross_sec_HI(nu),  params->emission, pow(nu*factor,params->alphaX), planck_cgs*(nu-nu_HI),cross_sec_HI(nu));
+//         printf("           nu = %e\t%e\tmfp = %e\tnu_min = %e\n",nu, emission*pow(nu/params->nu_min*factor,params->alphaX)*planck_cgs*(nu-nu_HI)*cross_sec_HI(nu), mfp, params->nu_min/factor);
         return emission*pow(nu/params->nu_min*factor,params->alphaX)*planck_cgs*(nu-nu_HI)*cross_sec_HI(nu);
     }else{
         return 0.;
@@ -176,7 +185,7 @@ double xray_heating_function_HeI(double nu, void *p)
     
     params->nu = nu;    //nu is in reference frame of zp (at absorption site)
     double factor = (1.+params->z)/(1.+params->zp);
-    double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
+    double mfp = xray_mfp_calc_integral(*params, params->zp, params->z);
     double emission = params->emission/(planck_cgs*params->nu_min);
 
     if(mfp <= 1. && nu >= params->nu_min/factor){    // nu_min is in reference frame of emitter, i.e. z
@@ -192,7 +201,7 @@ double xray_heating_function_HeII(double nu, void *p)
     
     params->nu = nu;    //nu is in reference frame of zp (at absorption site)
     double factor = (1.+params->z)/(1.+params->zp);
-    double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
+    double mfp = xray_mfp_calc_integral(*params, params->zp, params->z);
     double emission = params->emission/(planck_cgs*params->nu_min);
 
     if(mfp <= 1. && nu >= params->nu_min/factor){    // nu_min is in reference frame of emitter, i.e. z
@@ -208,10 +217,10 @@ double xray_heating_HI_calc_integral(xray_params_t params, double lowLim, double
     F.function = &xray_heating_function_HI;
     F.params = &params;
     double result, error;
-    
+        
     gsl_integration_workspace * w = gsl_integration_workspace_alloc(100000); 
     
-    gsl_integration_qag(&F, lowLim, upLim, 1.e-9, 1.e-9, 10000, 1, w, &result, &error);
+    gsl_integration_qag(&F, lowLim, upLim, 1.e-9, 1.e-9, 100000, 1, w, &result, &error);
     
     gsl_integration_workspace_free(w);
     return result;
@@ -257,7 +266,7 @@ double xray_ionization_function_HI(double nu, void *p)
     
     params->nu = nu;    //nu is in reference frame of zp (at absorption site)
     double factor = (1.+params->z)/(1.+params->zp);
-    double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
+    double mfp = xray_mfp_calc_integral(*params, params->zp, params->z+1.e-10);
     double emission = params->emission/(planck_cgs*params->nu_min);
     
     if(mfp <= 1. && nu >= params->nu_min/factor){    // nu_min is in reference frame of emitter, i.e. z
@@ -273,7 +282,7 @@ double xray_ionization_function_HeI(double nu, void *p)
     
     params->nu = nu;    //nu is in reference frame of zp (at absorption site)
     double factor = (1.+params->z)/(1.+params->zp);
-    double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
+    double mfp = xray_mfp_calc_integral(*params, params->zp, params->z);
     double emission = params->emission/(planck_cgs*params->nu_min);
 
     if(mfp <= 1. && nu >= params->nu_min/factor){    // nu_min is in reference frame of emitter, i.e. z
@@ -289,7 +298,7 @@ double xray_ionization_function_HeII(double nu, void *p)
     
     params->nu = nu;    //nu is in reference frame of zp (at absorption site)
     double factor = (1.+params->z)/(1.+params->zp);
-    double mfp = xray_mfp_calc_integral(*params, params->z, params->zp);
+    double mfp = xray_mfp_calc_integral(*params, params->zp, params->z);
     double emission = params->emission/(planck_cgs*params->nu_min);
 
     if(mfp <= 1. && nu >= params->nu_min/factor){    // nu_min is in reference frame of emitter, i.e. z
@@ -376,7 +385,9 @@ void xray_build_filter_functions(xray_grid_t *thisXray_grid, double *xray_filter
         if(type == 0)
         {
             xray_filter_heating[i] = xray_heating_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+//             printf("%d:\t%e\t done filter heating\t%e\n", i, x, xray_params->emission);
             xray_filter_ionization[i] = xray_ionization_HI_calc_integral(*xray_params, nu_HI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
+//             printf("%d:\t%e\t done filter ionization\t%e\n", i, x, xray_params->emission);
         }else if(type == 1)
         {
             xray_filter_heating[i] = xray_heating_HeI_calc_integral(*xray_params, nu_HeI, nu_HI*1.e4)*SQR(1.+z)/(4.*M_PI*SQR(x + eps));
@@ -436,6 +447,9 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
     double *xray_filter_function_ionization;
     
     int nbins = thisXray_grid->nbins;
+#ifdef DEBUG_WRITE_XRAY_GRIDS_TO_FILE
+    int local_n0 = thisXray_grid->local_n0;
+#endif
     
     xray_params_t *xray_params;
     
@@ -537,7 +551,9 @@ void xray_heating_and_ionization(xray_grid_t *thisXray_grid, cosmology_t *thisCo
     deallocate_xray_params(xray_params);
     
 #ifdef DEBUG_XRAY_HEATING
+#ifndef DEBUG_WRITE_XRAY_GRIDS_TO_FILE
     int local_n0 = thisXray_grid->local_n0;
+#endif
 
     for(int i=0; i<local_n0; i++)
     {

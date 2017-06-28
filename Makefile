@@ -48,7 +48,8 @@ EXECUTABLE := 21CMGRID
 # DEBUGFLAG_LYA_SPECTRUM
 # ---------------------------------
 
-DEBUG = 
+DEBUG = -D DEBUG_WRITE_XRAY_GRIDS_TO_FILE 
+#-D DEBUG_XRAY_HEATING
 
 # ---------------------------------
 

@@ -333,6 +333,15 @@ void evolve(confObj_t simParam, int myRank)
     
     if(myRank == 0) printf("done\n");
     
+//     double temperature = 1.e5;
+//     int index = 0;
+//     for(int i=0; i<180; i++)
+//     {
+//         temperature = 1.e3 + pow(10.,i*0.05);
+//         index = temp_recomb_index(recomb_rates, temperature);
+//         printf("%d:\t T = %e\t recHII = %e\t %e\n\n", i, temperature, recomb_rates->recHII[index], recHII(temperature));
+//     }
+    
 /*-------------------------------------------------------------------------------------*/
 /* REDSHIFT EVOLUTION */
 /*-------------------------------------------------------------------------------------*/
@@ -342,7 +351,7 @@ void evolve(confObj_t simParam, int myRank)
     
     if(snap<thisInputlist->num-1) snap++;
     
-    double *redshift;
+    double* redshift;
     
     redshift = create_redshift_table(thisInputlist, zstart, zend, dz);
     

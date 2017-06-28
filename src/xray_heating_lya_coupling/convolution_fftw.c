@@ -41,8 +41,8 @@ void convolve_fft(xray_grid_t *thisXray_grid, fftw_complex *filter, fftw_complex
 	input_ft = fftw_alloc_complex(alloc_local);
 	filter_ft = fftw_alloc_complex(alloc_local);
 	
-	plan_input = fftw_mpi_plan_dft_3d(nbins, nbins, nbins, input, input_ft, MPI_COMM_WORLD, FFTW_FORWARD, FFTW_MPI_TRANSPOSED_OUT); //FFTW_MPI_TRANSPOSED_OUT
-	plan_filter = fftw_mpi_plan_dft_3d(nbins, nbins, nbins, filter, filter_ft, MPI_COMM_WORLD, FFTW_FORWARD, FFTW_MPI_TRANSPOSED_OUT);
+	plan_input = fftw_mpi_plan_dft_3d(nbins, nbins, nbins, input, input_ft, MPI_COMM_WORLD, FFTW_FORWARD, FFTW_ESTIMATE);//FFTW_MPI_TRANSPOSED_OUT); //FFTW_MPI_TRANSPOSED_OUT
+	plan_filter = fftw_mpi_plan_dft_3d(nbins, nbins, nbins, filter, filter_ft, MPI_COMM_WORLD, FFTW_FORWARD, FFTW_ESTIMATE);//FFTW_MPI_TRANSPOSED_OUT);
 #else 
 	input_ft = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*nbins*nbins*nbins);
 	if(input_ft == NULL)
@@ -80,7 +80,7 @@ void convolve_fft(xray_grid_t *thisXray_grid, fftw_complex *filter, fftw_complex
 // 	write_grid_to_file_float(input_ft, nbins, local_n0, thisXray_grid->local_0_start, "input_ft.dat");
 
 #ifdef __MPI
-	plan_back = fftw_mpi_plan_dft_3d(nbins, nbins, nbins, input_ft, output, MPI_COMM_WORLD, FFTW_BACKWARD, FFTW_MPI_TRANSPOSED_IN);
+	plan_back = fftw_mpi_plan_dft_3d(nbins, nbins, nbins, input_ft, output, MPI_COMM_WORLD, FFTW_BACKWARD, FFTW_ESTIMATE);//FFTW_MPI_TRANSPOSED_IN);
 #else
 	plan_back = fftw_plan_dft_3d(nbins, nbins, nbins, input_ft, output, FFTW_BACKWARD, FFTW_ESTIMATE);
 #endif
